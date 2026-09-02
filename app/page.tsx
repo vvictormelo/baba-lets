@@ -13,7 +13,6 @@ export default function LoginPage() {
   const router = useRouter()
   const [participants, setParticipants] = useState<Participant[]>([])
   const [selectedId, setSelectedId] = useState<string>('')
-  const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [loadingList, setLoadingList] = useState(true)
@@ -29,14 +28,14 @@ export default function LoginPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    if (!selectedId || !pin) return
+    if (!selectedId) return
     setLoading(true)
     setError('')
 
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participant_id: Number(selectedId), pin }),
+      body: JSON.stringify({ participant_id: Number(selectedId) }),
     })
     const data = await res.json()
 
@@ -90,21 +89,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Seu PIN
-              </label>
-              <input
-                type="number"
-                value={pin}
-                onChange={e => setPin(e.target.value)}
-                placeholder="0000"
-                maxLength={4}
-                className="w-full h-11 px-3 border border-gray-300 rounded-lg text-gray-900 text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
-              />
-            </div>
-
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
                 {error}
@@ -113,7 +97,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || !selectedId || !pin}
+              disabled={loading || !selectedId}
               className="w-full h-12 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
             >
               {loading ? 'Entrando...' : 'Entrar'}
