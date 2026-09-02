@@ -13,7 +13,7 @@ export async function GET() {
     .single()
 
   if (setting?.value !== 'true') {
-    return NextResponse.json({ revealed: false }, { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json({ revealed: false }, { headers: { 'Cache-Control': 'no-store, max-age=0', 'CDN-Cache-Control': 'no-store' } })
   }
 
   const [{ data: votes, error }, { data: participants }] = await Promise.all([
@@ -26,22 +26,47 @@ export async function GET() {
   const nameMap: Record<number, string> = {}
   for (const p of participants ?? []) nameMap[p.id] = p.name
 
-  const poteMap: Record<number, Record<number, { name: string; votes: number }>> = {}
-  for (let p = 1; p <= 6; p++) poteMap[p] = {}
-
+  // Conta votos por pessoa por pote
+  const voteCounts: Record<number, Record<number, number>> = {}
   for (const v of votes ?? []) {
-    const name = nameMap[v.voted_for_id]
-    if (!name) continue
-    if (!poteMap[v.pote][v.voted_for_id]) {
-      poteMap[v.pote][v.voted_for_id] = { name, votes: 0 }
+    if (!voteCounts[v.voted_for_id]) voteCounts[v.voted_for_id] = {}
+    voteCounts[v.voted_for_id][v.pote] = (voteCounts[v.voted_for_id][v.pote] || 0) + 1
+  }
+
+  // Gera todos os candidatos (pessoa × pote) e ordena por votos desc
+  const candidates: { personId: number; pote: number; votes: number }[] = []
+  for (const [personIdStr, poteCounts] of Object.entries(voteCounts)) {
+    const personId = Number(personIdStr)
+    for (const [poteStr, count] of Object.entries(poteCounts)) {
+      candidates.push({ personId, pote: Number(poteStr), votes: count })
     }
-    poteMap[v.pote][v.voted_for_id].votes++
+  }
+  // Ordena: mais votos primeiro; em empate, pote menor tem prioridade (pote mais forte)
+  candidates.sort((a, b) => b.votes - a.votes || a.pote - b.pote)
+
+  // Draft greedy: atribui cada pessoa ao melhor pote disponível (max 3 por pote)
+  const poteAssignments: Record<number, { name: string; votes: number }[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
+  const assignedPeople = new Set<number>()
+  const fullPotes = new Set<number>()
+
+  for (const c of candidates) {
+    if (assignedPeople.has(c.personId)) continue
+    if (fullPotes.has(c.pote)) continue
+    const name = nameMap[c.personId]
+    if (!name) continue
+
+    poteAssignments[c.pote].push({ name, votes: c.votes })
+    assignedPeople.add(c.personId)
+    if (poteAssignments[c.pote].length >= 3) fullPotes.add(c.pote)
   }
 
   const results = [1, 2, 3, 4, 5, 6].map(pote => ({
     pote,
-    ranking: Object.values(poteMap[pote]).sort((a, b) => b.votes - a.votes),
+    ranking: poteAssignments[pote].sort((a, b) => b.votes - a.votes),
   }))
 
-  return NextResponse.json({ revealed: true, results }, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json(
+    { revealed: true, results },
+    { headers: { 'Cache-Control': 'no-store, max-age=0', 'CDN-Cache-Control': 'no-store' } }
+  )
 }
