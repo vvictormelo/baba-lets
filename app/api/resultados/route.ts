@@ -13,7 +13,7 @@ export async function GET() {
     .single()
 
   if (setting?.value !== 'true') {
-    return NextResponse.json({ revealed: false })
+    return NextResponse.json({ revealed: false }, { headers: { 'Cache-Control': 'no-store' } })
   }
 
   const [{ data: votes, error }, { data: participants }] = await Promise.all([
@@ -43,5 +43,5 @@ export async function GET() {
     ranking: Object.values(poteMap[pote]).sort((a, b) => b.votes - a.votes),
   }))
 
-  return NextResponse.json({ revealed: true, results })
+  return NextResponse.json({ revealed: true, results }, { headers: { 'Cache-Control': 'no-store' } })
 }
