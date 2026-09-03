@@ -1,23 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 
-export async function POST(req: NextRequest) {
-  const { participant_id } = await req.json()
+export const dynamic = 'force-dynamic'
 
-  if (!participant_id) {
-    return NextResponse.json({ error: 'Selecione seu nome' }, { status: 400 })
+export async function POST(req: NextRequest) {
+  const { player_id } = await req.json()
+  if (!player_id) {
+    return NextResponse.json({ error: 'player_id obrigatório' }, { status: 400 })
   }
 
   const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('baba_participants')
-    .select('id, name, has_voted')
-    .eq('id', participant_id)
+
+  const { data: player, error } = await supabase
+    .from('players')
+    .select('id, name, active')
+    .eq('id', player_id)
     .single()
 
-  if (error || !data) {
-    return NextResponse.json({ error: 'Participante não encontrado' }, { status: 404 })
+  if (error || !player) {
+    return NextResponse.json({ error: 'Jogador não encontrado' }, { status: 404 })
+  }
+  if (!player.active) {
+    return NextResponse.json({ error: 'Jogador inativo' }, { status: 403 })
   }
 
-  return NextResponse.json({ id: data.id, name: data.name, has_voted: data.has_voted })
+  const { count } = await supabase
+    .from('votes')
+    .select('*', { count: 'exact', head: true })
+    .eq('voter_id', player_id)
+
+  return NextResponse.json(
+    { id: player.id, name: player.name, has_voted: (count ?? 0) > 0 },
+    { headers: { 'Cache-Control': 'no-store' } }
+  )
 }

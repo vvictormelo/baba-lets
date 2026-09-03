@@ -3,25 +3,24 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-interface Participant {
+interface Player {
   id: number
   name: string
-  has_voted: boolean
 }
 
 export default function LoginPage() {
   const router = useRouter()
-  const [participants, setParticipants] = useState<Participant[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [selectedId, setSelectedId] = useState<string>('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [loadingList, setLoadingList] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('/api/participants')
+    fetch('/api/players')
       .then(r => r.json())
       .then(data => {
-        setParticipants(data)
+        setPlayers(data)
         setLoadingList(false)
       })
   }, [])
@@ -35,7 +34,7 @@ export default function LoginPage() {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participant_id: Number(selectedId) }),
+      body: JSON.stringify({ player_id: Number(selectedId) }),
     })
     const data = await res.json()
 
@@ -47,12 +46,7 @@ export default function LoginPage() {
 
     sessionStorage.setItem('baba_voter_id', String(data.id))
     sessionStorage.setItem('baba_voter_name', data.name)
-
-    if (data.has_voted) {
-      router.push('/resumo?readonly=1')
-    } else {
-      router.push('/votar')
-    }
+    router.push('/votar')
   }
 
   return (
@@ -61,7 +55,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="text-6xl mb-3">⚽</div>
           <h1 className="text-3xl font-bold text-gray-900">Baba Lets</h1>
-          <p className="text-gray-500 mt-1">Monte seus potes e vote!</p>
+          <p className="text-gray-500 mt-1">Avalie os jogadores e monte os times!</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
@@ -80,10 +74,8 @@ export default function LoginPage() {
                   required
                 >
                   <option value="">Selecione seu nome...</option>
-                  {participants.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}{p.has_voted ? ' ✓' : ''}
-                    </option>
+                  {players.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
               )}
@@ -105,9 +97,13 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          Admin? <a href="/admin" className="text-green-600 hover:underline">Acesse aqui</a>
-        </p>
+        <div className="flex justify-center gap-4 mt-6">
+          <a href="/ranking" className="text-xs text-green-600 hover:underline">Ver ranking</a>
+          <span className="text-xs text-gray-300">|</span>
+          <a href="/resultado" className="text-xs text-green-600 hover:underline">Ver resultado</a>
+          <span className="text-xs text-gray-300">|</span>
+          <a href="/admin" className="text-xs text-gray-400 hover:text-gray-600">Admin</a>
+        </div>
       </div>
     </div>
   )

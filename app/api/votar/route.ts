@@ -1,55 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
+import { POTE_POINTS } from '@/lib/constants'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const { voter_id, votes } = await req.json()
+  const body = await req.json()
+  const { voter_id, votes } = body as {
+    voter_id: number
+    votes: { votee_id: number; pote: number }[]
+  }
 
-  if (!voter_id || !votes || !Array.isArray(votes)) {
+  if (!voter_id || !Array.isArray(votes) || votes.length === 0) {
     return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 })
   }
-
-  // Validate: exactly 3 per pote, potes 1-6
-  const poteCounts: Record<number, number> = {}
-  for (const v of votes) {
-    if (v.pote < 1 || v.pote > 6) {
-      return NextResponse.json({ error: 'Pote inválido' }, { status: 400 })
-    }
-    poteCounts[v.pote] = (poteCounts[v.pote] || 0) + 1
+  if (votes.some(v => v.votee_id === voter_id)) {
+    return NextResponse.json({ error: 'Não pode votar em si mesmo' }, { status: 400 })
   }
-
-  for (let p = 1; p <= 6; p++) {
-    if ((poteCounts[p] || 0) !== 3) {
-      return NextResponse.json({ error: `Pote ${p} deve ter exatamente 3 pessoas` }, { status: 400 })
-    }
+  if (votes.some(v => v.pote < 1 || v.pote > 6)) {
+    return NextResponse.json({ error: 'Pote inválido (1-6)' }, { status: 400 })
   }
 
   const supabase = createServerClient()
 
-  // Check if already voted
-  const { data: participant } = await supabase
-    .from('baba_participants')
-    .select('has_voted')
+  const { data: voter } = await supabase
+    .from('players')
+    .select('id')
     .eq('id', voter_id)
+    .eq('active', true)
     .single()
 
-  if (participant?.has_voted) {
-    return NextResponse.json({ error: 'Você já votou' }, { status: 409 })
+  if (!voter) {
+    return NextResponse.json({ error: 'Jogador não encontrado' }, { status: 404 })
   }
 
-  // Insert votes
-  const rows = votes.map((v: { voted_for_id: number; pote: number }) => ({
+  const rows = votes.map(v => ({
     voter_id,
-    voted_for_id: v.voted_for_id,
+    votee_id: v.votee_id,
     pote: v.pote,
+    points: POTE_POINTS[v.pote],
   }))
 
-  const { error: insertError } = await supabase.from('baba_votes').insert(rows)
-  if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 })
-  }
+  const { error } = await supabase
+    .from('votes')
+    .upsert(rows, { onConflict: 'voter_id,votee_id' })
 
-  // Mark as voted
-  await supabase.from('baba_participants').update({ has_voted: true }).eq('id', voter_id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } })
 }

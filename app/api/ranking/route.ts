@@ -5,17 +5,13 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const supabase = createServerClient()
+
   const { data, error } = await supabase
-    .from('baba_participants')
-    .select('id, name, has_voted')
-    .order('name')
+    .from('player_ranking')
+    .select('id, name, total_points, vote_count, ranking_index')
+    .eq('active', true)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data, {
-    headers: {
-      'Cache-Control': 'no-store, max-age=0',
-      'CDN-Cache-Control': 'no-store',
-      'Vercel-CDN-Cache-Control': 'no-store',
-    },
-  })
+
+  return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
 }
