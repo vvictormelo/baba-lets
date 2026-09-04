@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 interface Player {
   id: number
   name: string
+  vote_count: number
 }
 
 interface VoteMap {
@@ -165,9 +166,16 @@ export default function VotarPage() {
                 className="bg-white rounded-xl border border-gray-200 px-4 py-3"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium text-gray-900 text-sm min-w-0 truncate">
-                    {player.name}
-                  </span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium text-gray-900 text-sm truncate">
+                      {player.name}
+                    </span>
+                    {player.vote_count === 0 && (
+                      <span className="flex-shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 border border-orange-200">
+                        Novato
+                      </span>
+                    )}
+                  </div>
                   <div className="flex gap-1 flex-shrink-0">
                     {[1, 2, 3, 4, 5, 6].map(pote => (
                       <button

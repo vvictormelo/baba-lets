@@ -7,8 +7,8 @@ export async function GET() {
   const supabase = createServerClient()
 
   const { data, error } = await supabase
-    .from('players')
-    .select('id, name, active')
+    .from('player_ranking')
+    .select('id, name, vote_count')
     .eq('active', true)
     .order('name')
 
