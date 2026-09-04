@@ -91,13 +91,24 @@ export default function AdminRodadaPage() {
     return true
   }, [])
 
+  useEffect(() => {
+    const saved = sessionStorage.getItem('baba_admin_pwd')
+    if (!saved) return
+    setPassword(saved)
+    fetchAll(saved).then(ok => { if (ok) setAuthenticated(true) })
+  }, [fetchAll])
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setAuthError('')
     const ok = await fetchAll(password)
-    if (!ok) setAuthError('Senha incorreta')
-    else setAuthenticated(true)
+    if (!ok) {
+      setAuthError('Senha incorreta')
+    } else {
+      sessionStorage.setItem('baba_admin_pwd', password)
+      setAuthenticated(true)
+    }
     setLoading(false)
   }
 
