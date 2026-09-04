@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
   const history = (participations || [])
     .map(p => {
-      const round = p.rounds as { id: number; scheduled_date: string; status: string } | null
+      const round = p.rounds as unknown as { id: number; scheduled_date: string; status: string } | null
       return {
         round_id: p.round_id,
         scheduled_date: round?.scheduled_date ?? null,
