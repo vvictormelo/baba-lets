@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<AdminStatus | null>(null)
   const [loading, setLoading] = useState(false)
   const [toggling, setToggling] = useState(false)
+  const [closing, setClosing] = useState(false)
   const [message, setMessage] = useState('')
 
   const fetchStatus = useCallback(async (pwd: string) => {
@@ -53,6 +54,24 @@ export default function AdminPage() {
       setAuthenticated(true)
     }
     setLoading(false)
+  }
+
+  async function handleCloseRound() {
+    if (!status?.active_round) return
+    setClosing(true)
+    const res = await fetch(`/api/admin/rounds/${status.active_round.id}/close`, {
+      method: 'POST',
+      headers: { 'x-admin-password': password },
+    })
+    const data = await res.json()
+    if (res.ok) {
+      await fetchStatus(password)
+      setMessage('Rodada encerrada!')
+    } else {
+      setMessage(data.error || 'Erro ao encerrar rodada')
+    }
+    setTimeout(() => setMessage(''), 4000)
+    setClosing(false)
   }
 
   async function toggleReveal() {
@@ -197,6 +216,23 @@ export default function AdminPage() {
                 <span key={name} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">{name}</span>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Encerrar rodada */}
+        {status.active_round?.status === 'drawn' && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h2 className="font-semibold text-gray-900 mb-1">Encerrar rodada</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Confirme que a partida aconteceu. Após encerrada, substituições não serão mais possíveis.
+            </p>
+            <button
+              onClick={handleCloseRound}
+              disabled={closing}
+              className="w-full h-11 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-colors text-sm"
+            >
+              {closing ? 'Encerrando...' : 'Encerrar rodada'}
+            </button>
           </div>
         )}
 
