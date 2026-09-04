@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+
+// Analytics só ativo no Vercel
+const VercelAnalytics = process.env.VERCEL
+  ? require('@vercel/analytics/next').Analytics
+  : () => null
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR">
       <body className={inter.className}>
         {children}
-        <Analytics />
+        <VercelAnalytics />
       </body>
     </html>
   )

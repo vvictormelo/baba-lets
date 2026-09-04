@@ -1,0 +1,11 @@
+.git
+.next
+node_modules
+.env.local
+.env*.local
+npm-debug.log*
+README.md
+CLAUDE.md
+supabase-backup-v1.sql
+supabase-migration-v2.sql
+relatorio-votacao.html
