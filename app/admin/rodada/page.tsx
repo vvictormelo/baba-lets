@@ -69,6 +69,12 @@ export default function AdminRodadaPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
+  // Cadastro de novato
+  const [novatoNome, setNovatoNome] = useState('')
+  const [novatoPote, setNovatoPote] = useState<number>(6)
+  const [adicionandoNovato, setAdicionandoNovato] = useState(false)
+  const [showNovatoForm, setShowNovatoForm] = useState(false)
+
   // Substituição
   const [subOut, setSubOut] = useState<number | null>(null)
 
@@ -178,6 +184,38 @@ export default function AdminRodadaPage() {
     setSubOut(null)
     await fetchAll(password)
     showMessage('Substituição realizada!')
+  }
+
+  async function handleCadastrarNovato(e: React.FormEvent) {
+    e.preventDefault()
+    if (!novatoNome.trim() || !novatoPote || !roundData) return
+    setAdicionandoNovato(true)
+    setError('')
+
+    // 1. Cria o jogador
+    const playerRes = await fetch('/api/admin/players', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ name: novatoNome.trim() }),
+    })
+    const player = await playerRes.json()
+    if (!playerRes.ok) { setError(player.error || 'Erro ao criar jogador'); setAdicionandoNovato(false); return }
+
+    // 2. Adiciona à rodada como novato com pote manual
+    const partRes = await fetch(`/api/admin/rounds/${roundData.round.id}/participants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ player_id: player.id, confirmed: true, is_novice: true, manual_pote: novatoPote }),
+    })
+    const partData = await partRes.json()
+    if (!partRes.ok) { setError(partData.error || 'Erro ao adicionar à rodada'); setAdicionandoNovato(false); return }
+
+    setNovatoNome('')
+    setNovatoPote(6)
+    setShowNovatoForm(false)
+    await fetchAll(password)
+    showMessage(`${player.name} cadastrado como novato no Pote ${novatoPote}!`)
+    setAdicionandoNovato(false)
   }
 
   function showMessage(msg: string) {
@@ -306,6 +344,52 @@ export default function AdminRodadaPage() {
                 {confirmedCount}/18
               </span>
             </div>
+
+            {/* Cadastrar novato */}
+            {!drawn && (
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 text-sm">Cadastrar novato</h2>
+                    <p className="text-xs text-gray-400">Cria o jogador e já adiciona à rodada com pote manual.</p>
+                  </div>
+                  <button
+                    onClick={() => setShowNovatoForm(v => !v)}
+                    className="text-sm text-green-600 hover:text-green-700 font-medium"
+                  >
+                    {showNovatoForm ? 'Fechar' : '+ Adicionar'}
+                  </button>
+                </div>
+                {showNovatoForm && (
+                  <form onSubmit={handleCadastrarNovato} className="px-4 py-3 flex gap-2 flex-wrap">
+                    <input
+                      type="text"
+                      value={novatoNome}
+                      onChange={e => setNovatoNome(e.target.value)}
+                      placeholder="Nome do novato"
+                      className="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                    <select
+                      value={novatoPote}
+                      onChange={e => setNovatoPote(Number(e.target.value))}
+                      className="h-10 px-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      {[1,2,3,4,5,6].map(p => (
+                        <option key={p} value={p}>Pote {p}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={adicionandoNovato || !novatoNome.trim()}
+                      className="h-10 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      {adicionandoNovato ? '...' : 'Cadastrar'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
 
             {/* Lista de jogadores para confirmar presença */}
             {!drawn && (
