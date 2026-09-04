@@ -21,7 +21,7 @@ export async function POST(
 
   const supabase = createServerClient()
 
-  // Busca o pote do jogador que sai
+  // Busca pote e time do jogador que sai
   const { data: outEntry } = await supabase
     .from('round_teams')
     .select('team, pote')
@@ -33,19 +33,19 @@ export async function POST(
     return NextResponse.json({ error: 'Jogador não está no sorteio' }, { status: 404 })
   }
 
-  // Valida que o substituto é do mesmo pote
-  const { data: inPot } = await supabase
-    .from('round_pots')
-    .select('pote')
-    .eq('round_id', round_id)
-    .eq('player_id', player_in_id)
+  // Valida que o substituto é um jogador ativo
+  const { data: playerIn } = await supabase
+    .from('players')
+    .select('id')
+    .eq('id', player_in_id)
+    .eq('active', true)
     .single()
 
-  if (!inPot || inPot.pote !== outEntry.pote) {
-    return NextResponse.json({ error: 'Substituto deve ser do mesmo pote' }, { status: 400 })
+  if (!playerIn) {
+    return NextResponse.json({ error: 'Substituto não encontrado ou inativo' }, { status: 404 })
   }
 
-  // Valida que o substituto não está já no time
+  // Valida que o substituto não está já em um time desta rodada
   const { data: alreadyInTeam } = await supabase
     .from('round_teams')
     .select('player_id')
@@ -57,7 +57,7 @@ export async function POST(
     return NextResponse.json({ error: 'Substituto já está em um time' }, { status: 409 })
   }
 
-  // Faz a substituição
+  // Faz a substituição mantendo pote do titular
   const { error } = await supabase
     .from('round_teams')
     .update({ player_id: player_in_id })

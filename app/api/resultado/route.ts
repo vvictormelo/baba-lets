@@ -33,7 +33,7 @@ export async function GET() {
     .eq('id', roundId)
     .single()
 
-  if (!round || round.status !== 'drawn') {
+  if (!round || !['drawn', 'closed'].includes(round.status)) {
     return NextResponse.json({ revealed: false }, { headers: { 'Cache-Control': 'no-store' } })
   }
 

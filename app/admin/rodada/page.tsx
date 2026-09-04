@@ -317,12 +317,12 @@ export default function AdminRodadaPage() {
     byTeam[t.team].push(t)
   }
 
-  // Para substituição: pote do jogador selecionado para sair
+  // Para substituição: jogador que sai e quem pode entrar
   const subOutEntry = subOut ? (roundData?.teams || []).find(t => t.player_id === subOut) : null
-  const subOutPote = subOutEntry?.pote
-  // Jogadores do mesmo pote que não estão no time
-  const potPlayers = subOutPote
-    ? (roundData?.pots || []).filter(p => p.pote === subOutPote && !byTeam[subOutEntry!.team]?.find(t => t.player_id === p.player_id) && p.player_id !== subOut)
+  const inTeamIds = new Set((roundData?.teams || []).map(t => t.player_id))
+  // Qualquer jogador ativo que não está em nenhum time pode substituir
+  const potPlayers = subOut
+    ? allPlayers.filter(p => !inTeamIds.has(p.id) && p.id !== subOut)
     : []
 
   return (
@@ -580,11 +580,11 @@ export default function AdminRodadaPage() {
                     <div className="flex flex-wrap gap-2">
                       {potPlayers.map(p => (
                         <button
-                          key={p.player_id}
-                          onClick={() => handleSubstitute(p.player_id)}
+                          key={p.id}
+                          onClick={() => handleSubstitute(p.id)}
                           className="px-3 py-1.5 bg-white border border-orange-300 text-orange-700 text-sm rounded-lg hover:bg-orange-100 transition-colors"
                         >
-                          {p.players.name}
+                          {p.name}
                         </button>
                       ))}
                     </div>
@@ -596,7 +596,7 @@ export default function AdminRodadaPage() {
 
                 {subOut && potPlayers.length === 0 && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mt-3 text-sm text-yellow-700">
-                    Não há substitutos disponíveis no mesmo pote.
+                    Todos os jogadores ativos já estão em um time.
                     <button onClick={() => setSubOut(null)} className="ml-2 text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
                   </div>
                 )}
