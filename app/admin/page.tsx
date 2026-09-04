@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { formatDate } from '@/lib/format'
 
 interface AdminStatus {
   total: number
@@ -96,9 +97,7 @@ export default function AdminPage() {
   if (!status) return null
 
   const progress = status.total > 0 ? Math.round((status.voted / status.total) * 100) : 0
-  const dateStr = status.active_round?.scheduled_date
-    ? new Date(status.active_round.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR')
-    : null
+  const dateStr = formatDate(status.active_round?.scheduled_date)
 
   return (
     <div className="min-h-screen bg-gray-50">

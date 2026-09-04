@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { DateInput } from '@/components/DateInput'
+import { formatDate, formatDateLong } from '@/lib/format'
 
 interface Player {
   id: number
@@ -271,10 +273,9 @@ export default function AdminRodadaPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
             <h2 className="font-semibold text-gray-900 mb-3">Nova rodada</h2>
             <form onSubmit={handleCreateRound} className="flex gap-2">
-              <input
-                type="date"
+              <DateInput
                 value={newDate}
-                onChange={e => setNewDate(e.target.value)}
+                onChange={setNewDate}
                 className="flex-1 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
@@ -295,7 +296,7 @@ export default function AdminRodadaPage() {
             <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
               <div>
                 <p className="font-semibold text-gray-900">
-                  {new Date(roundData.round.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  {formatDateLong(roundData.round.scheduled_date)}
                 </p>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${drawn ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                   {drawn ? 'Sorteado' : 'Em preparação'}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { formatDate } from '@/lib/format'
 
 interface TeamEntry {
   team: number
@@ -92,9 +93,7 @@ export default function ResultadoPage() {
     byPote[entry.pote].push(entry)
   }
 
-  const dateStr = round?.scheduled_date
-    ? new Date(round.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    : ''
+  const dateStr = formatDate(round?.scheduled_date)
 
   return (
     <div className="min-h-screen bg-gray-50">

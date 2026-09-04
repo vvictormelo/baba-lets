@@ -46,7 +46,7 @@ export default function LoginPage() {
 
     sessionStorage.setItem('baba_voter_id', String(data.id))
     sessionStorage.setItem('baba_voter_name', data.name)
-    router.push('/votar')
+    router.push('/painel')
   }
 
   return (
