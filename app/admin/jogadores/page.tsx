@@ -12,6 +12,7 @@ interface Player {
 export default function AdminJogadoresPage() {
   const [password, setPassword] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
+  const [checking, setChecking] = useState(true)
   const [authError, setAuthError] = useState('')
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(false)
@@ -31,9 +32,12 @@ export default function AdminJogadoresPage() {
 
   useEffect(() => {
     const saved = sessionStorage.getItem('baba_admin_pwd')
-    if (!saved) return
+    if (!saved) { setChecking(false); return }
     setPassword(saved)
-    fetchPlayers(saved).then(ok => { if (ok) setAuthenticated(true) })
+    fetchPlayers(saved).then(ok => {
+      if (ok) setAuthenticated(true)
+      setChecking(false)
+    })
   }, [])
 
   async function handleLogin(e: React.FormEvent) {
@@ -92,6 +96,14 @@ export default function AdminJogadoresPage() {
   function showMessage(msg: string) {
     setMessage(msg)
     setTimeout(() => setMessage(''), 3000)
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-400 text-sm">Verificando sessão...</div>
+      </div>
+    )
   }
 
   if (!authenticated) {

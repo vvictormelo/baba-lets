@@ -16,6 +16,7 @@ interface AdminStatus {
 export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
+  const [checking, setChecking] = useState(true)
   const [authError, setAuthError] = useState('')
   const [status, setStatus] = useState<AdminStatus | null>(null)
   const [loading, setLoading] = useState(false)
@@ -32,9 +33,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     const saved = sessionStorage.getItem('baba_admin_pwd')
-    if (!saved) return
+    if (!saved) { setChecking(false); return }
     setPassword(saved)
-    fetchStatus(saved).then(ok => { if (ok) setAuthenticated(true) })
+    fetchStatus(saved).then(ok => {
+      if (ok) setAuthenticated(true)
+      setChecking(false)
+    })
   }, [fetchStatus])
 
   async function handleLogin(e: React.FormEvent) {
@@ -63,6 +67,14 @@ export default function AdminPage() {
     setMessage(!status.results_revealed ? 'Resultado revelado!' : 'Resultado ocultado.')
     setTimeout(() => setMessage(''), 3000)
     setToggling(false)
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-400 text-sm">Verificando sessão...</div>
+      </div>
+    )
   }
 
   if (!authenticated) {

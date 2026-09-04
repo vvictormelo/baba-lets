@@ -61,6 +61,7 @@ export default function AdminRodadaPage() {
   const [authError, setAuthError] = useState('')
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
   const [roundData, setRoundData] = useState<ActiveRoundData | null>(null)
+  const [checking, setChecking] = useState(true)
   const [loading, setLoading] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newDate, setNewDate] = useState('')
@@ -93,9 +94,12 @@ export default function AdminRodadaPage() {
 
   useEffect(() => {
     const saved = sessionStorage.getItem('baba_admin_pwd')
-    if (!saved) return
+    if (!saved) { setChecking(false); return }
     setPassword(saved)
-    fetchAll(saved).then(ok => { if (ok) setAuthenticated(true) })
+    fetchAll(saved).then(ok => {
+      if (ok) setAuthenticated(true)
+      setChecking(false)
+    })
   }, [fetchAll])
 
   async function handleLogin(e: React.FormEvent) {
@@ -248,6 +252,14 @@ export default function AdminRodadaPage() {
   function showMessage(msg: string) {
     setMessage(msg)
     setTimeout(() => setMessage(''), 4000)
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-400 text-sm">Verificando sessão...</div>
+      </div>
+    )
   }
 
   if (!authenticated) {
