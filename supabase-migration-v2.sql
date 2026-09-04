@@ -105,7 +105,7 @@ SELECT
 FROM players p
 LEFT JOIN votes v ON v.votee_id = p.id
 GROUP BY p.id, p.name, p.active
-ORDER BY ranking_index DESC, p.name ASC;
+ORDER BY ranking_index DESC, vote_count DESC, p.name ASC;
 
 -- ─── SEED SETTINGS ───────────────────────────────────────────────────────────
 INSERT INTO baba_settings (key, value) VALUES

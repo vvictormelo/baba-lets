@@ -10,6 +10,9 @@ export async function GET() {
     .from('player_ranking')
     .select('id, name, total_points, vote_count, ranking_index')
     .eq('active', true)
+    .order('ranking_index', { ascending: false })
+    .order('vote_count', { ascending: false })
+    .order('name', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

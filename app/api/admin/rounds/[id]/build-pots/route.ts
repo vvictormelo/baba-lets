@@ -45,14 +45,18 @@ export async function POST(
 
   const { data: ranking, error: rErr } = await supabase
     .from('player_ranking')
-    .select('id, ranking_index')
+    .select('id, ranking_index, vote_count')
     .in('id', regularIds)
 
   if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 })
 
-  // Ordena por índice desc, desempate por id asc (menor id = mais antigo)
+  // Ordena por índice desc; empate → mais votos primeiro; empate → id asc
   const sortedRegular = (ranking || [])
-    .sort((a, b) => Number(b.ranking_index) - Number(a.ranking_index) || a.id - b.id)
+    .sort((a, b) =>
+      Number(b.ranking_index) - Number(a.ranking_index) ||
+      Number(b.vote_count) - Number(a.vote_count) ||
+      a.id - b.id
+    )
     .map(r => r.id)
 
   // Inicializa potes com novatos
