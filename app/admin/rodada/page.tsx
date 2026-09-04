@@ -66,6 +66,7 @@ export default function AdminRodadaPage() {
   const [newDate, setNewDate] = useState('')
   const [buildingPots, setBuildingPots] = useState(false)
   const [drawing, setDrawing] = useState(false)
+  const [closing, setClosing] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -171,6 +172,21 @@ export default function AdminRodadaPage() {
     setDrawing(false)
   }
 
+  async function handleCloseRound() {
+    if (!roundData) return
+    setClosing(true)
+    setError('')
+    const res = await fetch(`/api/admin/rounds/${roundData.round.id}/close`, {
+      method: 'POST',
+      headers: { 'x-admin-password': password },
+    })
+    const data = await res.json()
+    if (!res.ok) { setError(data.error || 'Erro ao encerrar'); setClosing(false); return }
+    await fetchAll(password)
+    showMessage('Rodada encerrada!')
+    setClosing(false)
+  }
+
   async function handleSubstitute(playerInId: number) {
     if (!roundData || !subOut) return
     setError('')
@@ -261,7 +277,8 @@ export default function AdminRodadaPage() {
   const confirmedCount = confirmedIds.size
   const canBuildPots = confirmedCount === 18 && (roundData?.pots?.length ?? 0) === 0
   const potsBuilt = (roundData?.pots?.length ?? 0) === 18
-  const drawn = roundData?.round?.status === 'drawn'
+  const drawn = roundData?.round?.status === 'drawn' || roundData?.round?.status === 'closed'
+  const canSubstitute = roundData?.round?.status === 'drawn'
 
   // Organiza potes para exibição
   const byPote: Record<number, PotEntry[]> = {}
@@ -514,13 +531,15 @@ export default function AdminRodadaPage() {
                               <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${POTE_BADGE[entry.pote]}`}>
                                 P{entry.pote}
                               </span>
-                              <button
-                                onClick={() => setSubOut(subOut === entry.player_id ? null : entry.player_id)}
-                                className="text-xs text-gray-400 hover:text-orange-500 px-1"
-                                title="Substituir"
-                              >
-                                ⇄
-                              </button>
+                              {canSubstitute && (
+                                <button
+                                  onClick={() => setSubOut(subOut === entry.player_id ? null : entry.player_id)}
+                                  className="text-xs text-gray-400 hover:text-orange-500 px-1"
+                                  title="Substituir"
+                                >
+                                  ⇄
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -558,6 +577,29 @@ export default function AdminRodadaPage() {
                     <button onClick={() => setSubOut(null)} className="ml-2 text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {drawn && roundData.round.status !== 'closed' && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                <h2 className="font-semibold text-gray-900 mb-1">Encerrar rodada</h2>
+                <p className="text-sm text-gray-500 mb-4">
+                  Confirme que a partida aconteceu e arquive esta rodada. Após encerrada, não será possível fazer substituições.
+                </p>
+                <button
+                  onClick={handleCloseRound}
+                  disabled={closing}
+                  className="w-full h-11 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-colors text-sm"
+                >
+                  {closing ? 'Encerrando...' : 'Encerrar rodada'}
+                </button>
+              </div>
+            )}
+
+            {roundData.round.status === 'closed' && (
+              <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 text-center">
+                <p className="text-sm font-semibold text-gray-500">Rodada encerrada</p>
+                <p className="text-xs text-gray-400 mt-0.5">A partida foi realizada e a rodada está arquivada.</p>
               </div>
             )}
 
