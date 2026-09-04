@@ -39,7 +39,6 @@ export default function VotarPage() {
   const [votes, setVotes] = useState<VoteMap>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -73,7 +72,6 @@ export default function VotarPage() {
       }
       return next
     })
-    setSaved(false)
   }, [])
 
   async function handleSave() {
@@ -95,10 +93,10 @@ export default function VotarPage() {
 
     if (!res.ok) {
       setError(data.error || 'Erro ao salvar')
+      setSaving(false)
     } else {
-      setSaved(true)
+      router.push('/checkout')
     }
-    setSaving(false)
   }
 
   const votedCount = Object.keys(votes).length
@@ -141,11 +139,6 @@ export default function VotarPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
-        {saved && (
-          <div className="bg-green-50 border border-green-300 text-green-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
-            Votos salvos! Você pode continuar avaliando e salvar novamente.
-          </div>
-        )}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center">
             {error}
