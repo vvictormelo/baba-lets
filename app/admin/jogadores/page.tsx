@@ -8,6 +8,7 @@ interface Player {
   name: string
   active: boolean
   is_novice: boolean
+  is_goalkeeper: boolean
 }
 
 export default function AdminJogadoresPage() {
@@ -36,6 +37,15 @@ export default function AdminJogadoresPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
       body: JSON.stringify({ is_novice: !player.is_novice }),
+    })
+    await fetchPlayers(password)
+  }
+
+  async function handleToggleGoalkeeper(player: Player) {
+    await fetch(`/api/admin/players/${player.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ is_goalkeeper: !player.is_goalkeeper }),
     })
     await fetchPlayers(password)
   }
@@ -220,11 +230,22 @@ export default function AdminJogadoresPage() {
                 ) : (
                   <>
                     <span className="flex-1 text-sm text-gray-900">{player.name}</span>
+                    {player.is_goalkeeper && (
+                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 border border-blue-200">
+                        Goleiro
+                      </span>
+                    )}
                     {player.is_novice && (
                       <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 border border-orange-200">
                         Novato
                       </span>
                     )}
+                    <button
+                      onClick={() => handleToggleGoalkeeper(player)}
+                      className="text-xs text-blue-400 hover:text-blue-600"
+                    >
+                      {player.is_goalkeeper ? 'Remover goleiro' : 'Marcar goleiro'}
+                    </button>
                     <button
                       onClick={() => handleToggleNovice(player)}
                       className="text-xs text-orange-400 hover:text-orange-600"

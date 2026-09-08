@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('player_ranking')
-    .select('id, name, vote_count, is_novice')
+    .select('id, name, vote_count, is_novice, is_goalkeeper')
     .eq('active', true)
     .order('name')
 

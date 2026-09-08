@@ -25,6 +25,9 @@ export async function PATCH(
   if (typeof body.is_novice === 'boolean') {
     patch.is_novice = body.is_novice
   }
+  if (typeof body.is_goalkeeper === 'boolean') {
+    patch.is_goalkeeper = body.is_goalkeeper
+  }
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: 'Nada para atualizar' }, { status: 400 })
@@ -35,7 +38,7 @@ export async function PATCH(
     .from('players')
     .update(patch)
     .eq('id', id)
-    .select('id, name, active, is_novice')
+    .select('id, name, active, is_novice, is_goalkeeper')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
