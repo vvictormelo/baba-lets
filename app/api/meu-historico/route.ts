@@ -19,15 +19,28 @@ export async function GET(req: NextRequest) {
     .single()
   const activeRoundId = setting?.value ? Number(setting.value) : null
 
-  // Dados completos da rodada ativa (data, status, total confirmados)
-  let activeRound: { id: number; scheduled_date: string; status: string; confirmados: number } | null = null
+  // Dados completos da rodada ativa (data, status, total confirmados, potes)
+  let activeRound: {
+    id: number
+    scheduled_date: string
+    status: string
+    confirmados: number
+    potes: { pote: number; player_id: number; name: string }[]
+  } | null = null
+
   if (activeRoundId) {
-    const [{ data: round }, { count }] = await Promise.all([
+    const [{ data: round }, { count }, { data: roundPots }] = await Promise.all([
       supabase.from('rounds').select('id, scheduled_date, status').eq('id', activeRoundId).single(),
       supabase.from('round_participants').select('*', { count: 'exact', head: true }).eq('round_id', activeRoundId),
+      supabase.from('round_pots').select('pote, player_id, players(name)').eq('round_id', activeRoundId).order('pote'),
     ])
     if (round) {
-      activeRound = { ...round, confirmados: count ?? 0 }
+      const potes = (roundPots || []).map(p => ({
+        pote: p.pote,
+        player_id: p.player_id,
+        name: (p.players as unknown as { name: string })?.name ?? '',
+      }))
+      activeRound = { ...round, confirmados: count ?? 0, potes }
     }
   }
 

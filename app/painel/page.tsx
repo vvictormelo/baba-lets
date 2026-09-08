@@ -15,11 +15,18 @@ interface HistoryEntry {
   active: boolean
 }
 
+interface PoteEntry {
+  pote: number
+  player_id: number
+  name: string
+}
+
 interface ActiveRound {
   id: number
   scheduled_date: string
   status: string
   confirmados: number
+  potes: PoteEntry[]
 }
 
 interface HistoricoData {
@@ -242,6 +249,39 @@ export default function PainelPage() {
             <p className="text-3xl mb-2">📅</p>
             <p className="text-gray-500 text-sm">Nenhuma rodada agendada no momento.</p>
             <p className="text-gray-400 text-xs mt-1">O admin vai cadastrar quando tiver data definida.</p>
+          </div>
+        )}
+
+        {/* Potes da rodada ativa */}
+        {activeRound && activeRound.potes.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900 text-sm">Potes da rodada</h2>
+              <p className="text-xs text-gray-400">Distribuição definida pelo organizador</p>
+            </div>
+            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[1, 2, 3, 4, 5, 6].map(pote => {
+                const jogadores = activeRound.potes.filter(p => p.pote === pote)
+                if (jogadores.length === 0) return null
+                return (
+                  <div key={pote} className="rounded-xl border border-gray-200 p-3">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full inline-block mb-2 ${POTE_BADGE[pote]}`}>
+                      Pote {pote}
+                    </span>
+                    <div className="space-y-1">
+                      {jogadores.map(j => (
+                        <p
+                          key={j.player_id}
+                          className={`text-xs truncate ${j.player_id === voterId ? 'font-bold text-green-700' : 'text-gray-700'}`}
+                        >
+                          {j.player_id === voterId ? '▶ ' : ''}{j.name}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
