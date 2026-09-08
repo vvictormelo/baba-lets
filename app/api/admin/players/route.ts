@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServerClient()
   const { data, error } = await supabase
     .from('players')
-    .select('id, name, active, created_at')
+    .select('id, name, active, is_novice, created_at')
     .order('name')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
