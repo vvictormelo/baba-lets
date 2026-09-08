@@ -22,6 +22,9 @@ export async function PATCH(
   if (typeof body.active === 'boolean') {
     patch.active = body.active
   }
+  if (typeof body.is_novice === 'boolean') {
+    patch.is_novice = body.is_novice
+  }
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: 'Nada para atualizar' }, { status: 400 })
@@ -32,7 +35,7 @@ export async function PATCH(
     .from('players')
     .update(patch)
     .eq('id', id)
-    .select('id, name, active')
+    .select('id, name, active, is_novice')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

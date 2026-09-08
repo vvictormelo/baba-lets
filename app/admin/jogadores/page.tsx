@@ -7,6 +7,7 @@ interface Player {
   id: number
   name: string
   active: boolean
+  is_novice: boolean
 }
 
 export default function AdminJogadoresPage() {
@@ -28,6 +29,15 @@ export default function AdminJogadoresPage() {
     })
     if (res.ok) setPlayers(await res.json())
     return res.ok
+  }
+
+  async function handleToggleNovice(player: Player) {
+    await fetch(`/api/admin/players/${player.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ is_novice: !player.is_novice }),
+    })
+    await fetchPlayers(password)
   }
 
   useEffect(() => {
@@ -210,6 +220,17 @@ export default function AdminJogadoresPage() {
                 ) : (
                   <>
                     <span className="flex-1 text-sm text-gray-900">{player.name}</span>
+                    {player.is_novice && (
+                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 border border-orange-200">
+                        Novato
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleToggleNovice(player)}
+                      className="text-xs text-orange-400 hover:text-orange-600"
+                    >
+                      {player.is_novice ? 'Remover novato' : 'Marcar novato'}
+                    </button>
                     <button
                       onClick={() => { setEditId(player.id); setEditName(player.name) }}
                       className="text-xs text-gray-400 hover:text-gray-600"

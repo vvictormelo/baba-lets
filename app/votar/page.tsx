@@ -7,6 +7,7 @@ interface Player {
   id: number
   name: string
   vote_count: number
+  is_novice: boolean
 }
 
 interface VoteMap {
@@ -163,7 +164,7 @@ export default function VotarPage() {
                     <span className="font-medium text-gray-900 text-sm truncate">
                       {player.name}
                     </span>
-                    {player.vote_count === 0 && (
+                    {player.is_novice && (
                       <span className="flex-shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 border border-orange-200">
                         Novato
                       </span>

@@ -227,7 +227,7 @@ export default function AdminRodadaPage() {
     const playerRes = await fetch('/api/admin/players', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ name: novatoNome.trim() }),
+      body: JSON.stringify({ name: novatoNome.trim(), is_novice: true }),
     })
     const player = await playerRes.json()
     if (!playerRes.ok) { setError(player.error || 'Erro ao criar jogador'); setAdicionandoNovato(false); return }
