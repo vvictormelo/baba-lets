@@ -140,14 +140,14 @@ export default function AdminJogadoresPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Senha admin"
-              className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
               required
             />
             {authError && <p className="text-red-600 text-sm">{authError}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
+              className="w-full h-11 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -174,7 +174,7 @@ export default function AdminJogadoresPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {message && (
-          <div className="bg-green-50 border border-green-300 text-green-800 rounded-xl px-4 py-3 text-sm text-center">
+          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 text-sm text-center">
             {message}
           </div>
         )}
@@ -186,12 +186,12 @@ export default function AdminJogadoresPage() {
             value={newName}
             onChange={e => setNewName(e.target.value)}
             placeholder="Nome do novo jogador"
-            className="flex-1 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="flex-1 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
           <button
             type="submit"
             disabled={adding || !newName.trim()}
-            className="px-4 h-10 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
+            className="px-4 h-10 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
           >
             {adding ? '...' : 'Adicionar'}
           </button>
@@ -211,12 +211,12 @@ export default function AdminJogadoresPage() {
                       type="text"
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
-                      className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                      className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
                       autoFocus
                     />
                     <button
                       onClick={() => handleRename(player.id)}
-                      className="text-xs text-green-600 hover:underline font-medium"
+                      className="text-xs text-blue-600 hover:underline font-medium"
                     >
                       Salvar
                     </button>
@@ -283,7 +283,7 @@ export default function AdminJogadoresPage() {
                   <span className="flex-1 text-sm text-gray-600 line-through">{player.name}</span>
                   <button
                     onClick={() => handleToggleActive(player)}
-                    className="text-xs text-green-600 hover:underline"
+                    className="text-xs text-blue-600 hover:underline"
                   >
                     Reativar
                   </button>

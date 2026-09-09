@@ -35,7 +35,7 @@ export default function RankingPage() {
             <h1 className="text-lg font-bold text-gray-900">Ranking Geral</h1>
             <p className="text-sm text-gray-500">Índice = média de pontos recebidos</p>
           </div>
-          <Link href="/" className="text-sm text-green-600 hover:underline">← Início</Link>
+          <Link href="/" className="text-sm text-blue-600 hover:underline">← Início</Link>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function RankingPage() {
                       <td className="px-4 py-3 text-gray-400 font-mono text-xs">{i + 1}º</td>
                       <td className="px-4 py-3 font-medium text-gray-900">{player.name}</td>
                       <td className="px-4 py-3 text-right">
-                        <span className="font-bold text-green-700 tabular-nums">
+                        <span className="font-bold text-blue-700 tabular-nums">
                           {Number(player.ranking_index).toFixed(2)}
                         </span>
                       </td>

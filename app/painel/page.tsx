@@ -36,17 +36,17 @@ interface HistoricoData {
 }
 
 const POTE_BADGE: Record<number, string> = {
-  1: 'bg-green-600 text-white',
-  2: 'bg-green-500 text-white',
-  3: 'bg-green-400 text-white',
+  1: 'bg-blue-900 text-white',
+  2: 'bg-blue-700 text-white',
+  3: 'bg-blue-500 text-white',
   4: 'bg-gray-500 text-white',
   5: 'bg-gray-400 text-white',
   6: 'bg-gray-300 text-gray-700',
 }
 
 const TEAM_COLOR: Record<number, string> = {
-  1: 'bg-green-100 text-green-800 border border-green-200',
-  2: 'bg-blue-100 text-blue-800 border border-blue-200',
+  1: 'bg-blue-100 text-blue-800 border border-blue-200',
+  2: 'bg-sky-100 text-sky-800 border border-sky-200',
   3: 'bg-orange-100 text-orange-800 border border-orange-200',
 }
 
@@ -142,7 +142,7 @@ export default function PainelPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {message && (
-          <div className="bg-green-50 border border-green-300 text-green-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
+          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
             {message}
           </div>
         )}
@@ -155,7 +155,7 @@ export default function PainelPage() {
         {/* Card da rodada ativa */}
         {activeRound ? (
           <div className={`rounded-2xl border-2 p-5 transition-colors ${
-            isConfirmed ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-white'
+            isConfirmed ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'
           }`}>
             {/* Data e status */}
             <div className="flex items-start justify-between gap-3 mb-4">
@@ -166,14 +166,14 @@ export default function PainelPage() {
                 </p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    activeRound.status === 'drawn' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    activeRound.status === 'drawn' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
                   }`}>
                     {STATUS_LABEL[activeRound.status] ?? activeRound.status}
                   </span>
                   <span className="text-xs text-gray-400">
                     {activeRound.confirmados}/18 confirmados
                     {!isConfirmed && vagas > 0 && !roundClosed && (
-                      <span className="text-green-600 font-medium"> · {vagas} vaga{vagas !== 1 ? 's' : ''}</span>
+                      <span className="text-blue-600 font-medium"> · {vagas} vaga{vagas !== 1 ? 's' : ''}</span>
                     )}
                     {!isConfirmed && vagas === 0 && !roundClosed && (
                       <span className="text-red-500 font-medium"> · lotado</span>
@@ -186,8 +186,8 @@ export default function PainelPage() {
               <div className="flex-shrink-0 text-center">
                 {isConfirmed ? (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white text-xl">✓</div>
-                    <p className="text-xs text-green-700 font-medium mt-1">Confirmado</p>
+                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl">✓</div>
+                    <p className="text-xs text-blue-700 font-medium mt-1">Confirmado</p>
                   </>
                 ) : (
                   <>
@@ -228,7 +228,7 @@ export default function PainelPage() {
                 <button
                   onClick={() => handleCheckin(true)}
                   disabled={checkingIn || vagas === 0}
-                  className="w-full h-12 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+                  className="w-full h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
                 >
                   {checkingIn ? 'Confirmando...' : vagas === 0 ? 'Rodada lotada' : 'Confirmar presença'}
                 </button>
@@ -238,7 +238,7 @@ export default function PainelPage() {
             {roundClosed && isConfirmed && (
               <Link
                 href="/resultado"
-                className="block w-full h-11 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors text-sm text-center leading-[2.75rem]"
+                className="block w-full h-11 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-xl transition-colors text-sm text-center leading-[2.75rem]"
               >
                 Ver resultado →
               </Link>
@@ -272,7 +272,7 @@ export default function PainelPage() {
                       {jogadores.map(j => (
                         <p
                           key={j.player_id}
-                          className={`text-xs truncate ${j.player_id === voterId ? 'font-bold text-green-700' : 'text-gray-700'}`}
+                          className={`text-xs truncate ${j.player_id === voterId ? 'font-bold text-blue-700' : 'text-gray-700'}`}
                         >
                           {j.player_id === voterId ? '▶ ' : ''}{j.name}
                         </p>
@@ -289,7 +289,7 @@ export default function PainelPage() {
         <div className="grid grid-cols-2 gap-3">
           <Link
             href="/votar"
-            className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col items-center gap-1 hover:border-green-400 hover:bg-green-50 transition-colors"
+            className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col items-center gap-1 hover:border-blue-400 hover:bg-blue-50 transition-colors"
           >
             <span className="text-2xl">🗳️</span>
             <span className="text-sm font-semibold text-gray-900">Avaliar jogadores</span>
@@ -299,7 +299,7 @@ export default function PainelPage() {
           </Link>
           <Link
             href="/ranking"
-            className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col items-center gap-1 hover:border-green-400 hover:bg-green-50 transition-colors"
+            className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col items-center gap-1 hover:border-blue-400 hover:bg-blue-50 transition-colors"
           >
             <span className="text-2xl">📊</span>
             <span className="text-sm font-semibold text-gray-900">Ranking</span>

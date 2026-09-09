@@ -25,9 +25,9 @@ const POTE_LABELS: Record<number, string> = {
 }
 
 const POTE_COLORS: Record<number, string> = {
-  1: 'bg-green-600 text-white',
-  2: 'bg-green-500 text-white',
-  3: 'bg-green-400 text-white',
+  1: 'bg-blue-900 text-white',
+  2: 'bg-blue-700 text-white',
+  3: 'bg-blue-500 text-white',
   4: 'bg-gray-500 text-white',
   5: 'bg-gray-400 text-white',
   6: 'bg-gray-300 text-gray-800',
@@ -126,7 +126,7 @@ export default function VotarPage() {
             <button
               onClick={handleSave}
               disabled={saving || votedCount === 0}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors"
+              className="px-4 py-2 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors"
             >
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
@@ -134,7 +134,7 @@ export default function VotarPage() {
         </div>
         <div className="h-1 bg-gray-100">
           <div
-            className="h-full bg-green-500 transition-all"
+            className="h-full bg-blue-600 transition-all"
             style={{ width: totalPlayers ? `${(votedCount / totalPlayers) * 100}%` : '0%' }}
           />
         </div>
@@ -202,7 +202,7 @@ export default function VotarPage() {
           <button
             onClick={handleSave}
             disabled={saving || votedCount === 0}
-            className="w-full h-12 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+            className="w-full h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
           >
             {saving ? 'Salvando...' : `Salvar ${votedCount} voto${votedCount !== 1 ? 's' : ''}`}
           </button>

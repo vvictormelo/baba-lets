@@ -25,23 +25,23 @@ interface ResultData {
 }
 
 const POTE_BADGE: Record<number, string> = {
-  1: 'bg-green-600 text-white',
-  2: 'bg-green-500 text-white',
-  3: 'bg-green-400 text-white',
+  1: 'bg-blue-900 text-white',
+  2: 'bg-blue-700 text-white',
+  3: 'bg-blue-500 text-white',
   4: 'bg-gray-500 text-white',
   5: 'bg-gray-400 text-white',
   6: 'bg-gray-300 text-gray-700',
 }
 
 const TEAM_COLORS = [
-  'border-green-400 bg-green-50',
-  'border-blue-400 bg-blue-50',
+  'border-blue-700 bg-blue-50',
+  'border-sky-400 bg-sky-50',
   'border-orange-400 bg-orange-50',
 ]
 
 const TEAM_HEADER = [
-  'bg-green-500 text-white',
-  'bg-blue-500 text-white',
+  'bg-blue-700 text-white',
+  'bg-sky-500 text-white',
   'bg-orange-500 text-white',
 ]
 
@@ -72,7 +72,7 @@ export default function ResultadoPage() {
         <div className="text-5xl mb-4">🔒</div>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Resultado ainda não revelado</h1>
         <p className="text-gray-500 mb-6 text-center">O admin vai revelar quando o sorteio estiver pronto.</p>
-        <Link href="/" className="text-green-600 hover:underline text-sm">← Voltar ao início</Link>
+        <Link href="/" className="text-blue-600 hover:underline text-sm">← Voltar ao início</Link>
       </div>
     )
   }
@@ -103,7 +103,7 @@ export default function ResultadoPage() {
             <h1 className="text-lg font-bold text-gray-900">⚽ Resultado do Sorteio</h1>
             {dateStr && <p className="text-sm text-gray-500">{dateStr}</p>}
           </div>
-          <Link href="/" className="text-sm text-green-600 hover:underline">← Início</Link>
+          <Link href="/" className="text-sm text-blue-600 hover:underline">← Início</Link>
         </div>
       </div>
 
