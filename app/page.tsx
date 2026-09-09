@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface Player {
   id: number
@@ -53,8 +54,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-3">⚽</div>
-          <h1 className="text-3xl font-bold text-gray-900">Baba Lets</h1>
+          <div className="flex justify-center mb-2">
+            <Image src="/logo.png" alt="Let's Baba!" width={160} height={160} priority />
+          </div>
           <p className="text-gray-500 mt-1">Avalie os jogadores e monte os times!</p>
         </div>
 

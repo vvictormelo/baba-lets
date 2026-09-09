@@ -14,8 +14,12 @@ const VercelSpeedInsights = process.env.VERCEL
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Baba Lets',
+  title: "Let's Baba!",
   description: 'Votação para o Baba Lets',
+  icons: {
+    icon: '/icon.png',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
