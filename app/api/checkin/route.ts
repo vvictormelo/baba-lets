@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createServerClient } from '@/lib/supabase-server'
+import { getActiveRoundId } from '@/lib/rounds'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
-  const { player_id, confirmar } = await req.json()
+const schema = z.object({
+  player_id: z.number().int().positive(),
+  confirmar: z.boolean(),
+})
 
-  if (!player_id) {
-    return NextResponse.json({ error: 'player_id obrigatório' }, { status: 400 })
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => null)
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dados inválidos', details: parsed.error.flatten() }, { status: 400 })
   }
+  const { player_id, confirmar } = parsed.data
 
   const supabase = createServerClient()
 
-  // Busca rodada ativa
-  const { data: setting } = await supabase
-    .from('baba_settings')
-    .select('value')
-    .eq('key', 'active_round_id')
-    .single()
-
-  const roundId = setting?.value ? Number(setting.value) : null
+  const roundId = await getActiveRoundId(supabase)
   if (!roundId) {
     return NextResponse.json({ error: 'Nenhuma rodada ativa no momento' }, { status: 404 })
   }
@@ -34,18 +35,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Rodada não está aceitando confirmações' }, { status: 409 })
   }
 
-  if (!confirmar) {
-    // Cancela presença
-    await supabase
-      .from('round_participants')
-      .delete()
-      .eq('round_id', roundId)
-      .eq('player_id', player_id)
+  const now = new Date().toISOString()
 
+  if (!confirmar) {
+    // Registra ausência permanentemente e remove dos participantes
+    await Promise.all([
+      supabase
+        .from('round_attendance')
+        .upsert({ round_id: roundId, player_id, status: 'absent', updated_at: now }, { onConflict: 'round_id,player_id' }),
+      supabase
+        .from('round_participants')
+        .delete()
+        .eq('round_id', roundId)
+        .eq('player_id', player_id),
+    ])
     return NextResponse.json({ success: true, confirmado: false }, { headers: { 'Cache-Control': 'no-store' } })
   }
 
-  // Verifica limite de 18
+  // Verifica se já está como participante (não conta no limite)
   const { data: existing } = await supabase
     .from('round_participants')
     .select('player_id')
@@ -53,6 +60,7 @@ export async function POST(req: NextRequest) {
     .eq('player_id', player_id)
     .single()
 
+  let isSuplente = false
   if (!existing) {
     const { count } = await supabase
       .from('round_participants')
@@ -60,15 +68,24 @@ export async function POST(req: NextRequest) {
       .eq('round_id', roundId)
 
     if ((count ?? 0) >= 18) {
-      return NextResponse.json({ error: 'Rodada já tem 18 confirmados. Fale com o admin.' }, { status: 409 })
+      // Registra como confirmado mas sinaliza que é suplente
+      isSuplente = true
+    } else {
+      await supabase
+        .from('round_participants')
+        .upsert({ round_id: roundId, player_id }, { onConflict: 'round_id,player_id' })
     }
   }
 
+  // Persiste presença permanentemente
   const { error } = await supabase
-    .from('round_participants')
-    .upsert({ round_id: roundId, player_id }, { onConflict: 'round_id,player_id' })
+    .from('round_attendance')
+    .upsert({ round_id: roundId, player_id, status: 'confirmed', updated_at: now }, { onConflict: 'round_id,player_id' })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ success: true, confirmado: true }, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json(
+    { success: true, confirmado: true, suplente: isSuplente },
+    { headers: { 'Cache-Control': 'no-store' } }
+  )
 }

@@ -53,3 +53,22 @@ export interface RoundTeam {
   pote: number
   player?: Pick<Player, 'id' | 'name'>
 }
+
+export interface RoundAttendance {
+  round_id: number
+  player_id: number
+  status: 'confirmed' | 'absent'
+  created_at: string
+  updated_at: string
+}
+
+export interface VoteHistory {
+  id: number
+  voter_id: number | null
+  votee_id: number | null
+  pote: number
+  points: number
+  prev_pote: number | null
+  prev_points: number | null
+  changed_at: string
+}
