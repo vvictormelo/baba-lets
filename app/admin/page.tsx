@@ -149,6 +149,7 @@ export default function AdminPage() {
           <div className="flex gap-3">
             <Link href="/admin/jogadores" className="text-sm text-blue-600 hover:underline">Jogadores</Link>
             <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline">Rodada</Link>
+            <Link href="/admin/historico" className="text-sm text-blue-600 hover:underline">Histórico</Link>
             <Link href="/admin/presenca" className="text-sm text-blue-600 hover:underline">Presença</Link>
           </div>
         </div>
