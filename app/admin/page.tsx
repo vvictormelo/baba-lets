@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+import { toast } from 'sonner'
 
 interface AdminStatus {
   total: number
@@ -21,12 +27,9 @@ export default function AdminPage() {
   const [status, setStatus] = useState<AdminStatus | null>(null)
   const [loading, setLoading] = useState(false)
   const [closing, setClosing] = useState(false)
-  const [message, setMessage] = useState('')
 
   const fetchStatus = useCallback(async (pwd: string) => {
-    const res = await fetch('/api/admin/status', {
-      headers: { 'x-admin-password': pwd },
-    })
+    const res = await fetch('/api/admin/status', { headers: { 'x-admin-password': pwd } })
     if (res.ok) setStatus(await res.json())
     return res.ok
   }, [])
@@ -46,12 +49,8 @@ export default function AdminPage() {
     setLoading(true)
     setAuthError('')
     const ok = await fetchStatus(password)
-    if (!ok) {
-      setAuthError('Senha incorreta')
-    } else {
-      sessionStorage.setItem('baba_admin_pwd', password)
-      setAuthenticated(true)
-    }
+    if (!ok) { setAuthError('Senha incorreta') }
+    else { sessionStorage.setItem('baba_admin_pwd', password); setAuthenticated(true) }
     setLoading(false)
   }
 
@@ -63,60 +62,48 @@ export default function AdminPage() {
       headers: { 'x-admin-password': password },
     })
     const data = await res.json()
-    if (res.ok) {
-      await fetchStatus(password)
-      setMessage('Rodada encerrada!')
-    } else {
-      setMessage(data.error || 'Erro ao encerrar rodada')
-    }
-    setTimeout(() => setMessage(''), 4000)
+    if (res.ok) { await fetchStatus(password); toast.success('Rodada encerrada!') }
+    else { toast.error(data.error || 'Erro ao encerrar rodada') }
     setClosing(false)
   }
 
-if (checking) {
+  if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-400 text-sm">Verificando sessão...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground text-sm">Verificando sessão...</p>
       </div>
     )
   }
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-6">
-            <div className="text-4xl mb-2">🔐</div>
-            <h1 className="text-2xl font-bold text-gray-900">Área Admin</h1>
-            <p className="text-gray-500 text-sm">Baba Lets</p>
-          </div>
-          <form onSubmit={handleLogin} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Senha admin</label>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader className="text-center pb-2">
+            <div className="text-4xl mb-1">🔐</div>
+            <CardTitle>Área Admin</CardTitle>
+            <p className="text-sm text-muted-foreground">Baba Lets</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Senha admin"
+                className="w-full h-10 px-3 border border-input rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               />
-            </div>
-            {authError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{authError}</div>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
-            >
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
-          <p className="text-center mt-4">
-            <Link href="/" className="text-sm text-gray-400 hover:text-gray-600">← Voltar</Link>
-          </p>
-        </div>
+              {authError && <p className="text-destructive text-sm">{authError}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Entrando...' : 'Entrar'}
+              </Button>
+            </form>
+            <p className="text-center mt-4">
+              <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">← Voltar</Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -126,118 +113,127 @@ if (checking) {
   const progress = status.total > 0 ? Math.round((status.voted / status.total) * 100) : 0
   const dateStr = formatDate(status.active_round?.scheduled_date)
 
+  const roundStatusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
+    closed: { label: 'Encerrada', variant: 'secondary' },
+    drawn:  { label: 'Sorteada',  variant: 'default' },
+    draft:  { label: 'Em preparação', variant: 'outline' },
+    open:   { label: 'Aberta',    variant: 'outline' },
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="bg-card border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900">Admin — Baba Lets</h1>
-          <div className="flex gap-3">
-            <Link href="/admin/jogadores" className="text-sm text-blue-600 hover:underline">Jogadores</Link>
-            <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline">Rodada</Link>
-            <Link href="/admin/historico" className="text-sm text-blue-600 hover:underline">Histórico</Link>
-            <Link href="/admin/presenca" className="text-sm text-blue-600 hover:underline">Presença</Link>
-          </div>
+          <h1 className="text-lg font-bold">Admin — Baba Lets</h1>
+          <nav className="flex gap-3 text-sm">
+            <Link href="/admin/jogadores" className="text-primary hover:underline">Jogadores</Link>
+            <Link href="/admin/rodada" className="text-primary hover:underline">Rodada</Link>
+            <Link href="/admin/historico" className="text-primary hover:underline">Histórico</Link>
+            <Link href="/admin/presenca" className="text-primary hover:underline">Presença</Link>
+          </nav>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-        {message && (
-          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
-            {message}
-          </div>
-        )}
-
         {/* Rodada ativa */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h2 className="font-semibold text-gray-900 mb-3">Rodada ativa</h2>
-          {status.active_round ? (
-            <>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-700 font-medium">{dateStr}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    status.active_round.status === 'closed' ? 'bg-gray-100 text-gray-500' :
-                    status.active_round.status === 'drawn' ? 'bg-blue-100 text-blue-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {status.active_round.status === 'closed' ? 'Encerrada' :
-                     status.active_round.status === 'drawn' ? 'Sorteada' :
-                     status.active_round.status === 'draft' ? 'Em preparação' : status.active_round.status}
-                  </span>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Rodada ativa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {status.active_round ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">{dateStr}</p>
+                    <div className="mt-1">
+                      {(() => {
+                        const st = roundStatusMap[status.active_round.status]
+                        return st ? <Badge variant={st.variant}>{st.label}</Badge> : null
+                      })()}
+                    </div>
+                  </div>
+                  <Link href="/admin/rodada">
+                    <Button variant="outline" size="sm">Gerenciar →</Button>
+                  </Link>
                 </div>
-                <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline font-medium">
-                  Gerenciar →
+                {status.active_round.status === 'closed' && (
+                  <Link href="/admin/rodada">
+                    <Button className="w-full mt-4" size="lg">+ Criar nova rodada</Button>
+                  </Link>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-muted-foreground text-sm">Nenhuma rodada ativa.</p>
+                <Link href="/admin/rodada">
+                  <Button variant="outline" size="sm">Criar rodada →</Button>
                 </Link>
               </div>
-              {status.active_round.status === 'closed' && (
-                <Link
-                  href="/admin/rodada"
-                  className="mt-4 flex w-full items-center justify-center h-11 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-xl transition-colors text-sm"
-                >
-                  + Criar nova rodada
-                </Link>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center justify-between">
-              <p className="text-gray-400 text-sm">Nenhuma rodada ativa.</p>
-              <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline">Criar rodada →</Link>
-            </div>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Progresso de votação */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-900">Progresso da votação</h2>
-            <span className="text-2xl font-bold text-blue-700">{progress}%</span>
-          </div>
-          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
-            <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
-              <div className="text-2xl font-bold text-blue-700">{status.voted}</div>
-              <div className="text-blue-600 text-xs">Já avaliaram</div>
+        {/* Progresso da votação */}
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-semibold text-sm">Progresso da votação</p>
+              <span className="text-2xl font-bold text-primary">{progress}%</span>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-              <div className="text-2xl font-bold text-gray-700">{status.total - status.voted}</div>
-              <div className="text-gray-500 text-xs">Pendentes</div>
+            <Progress value={progress} className="h-2.5 mb-4" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
+                <div className="text-2xl font-bold text-primary">{status.voted}</div>
+                <div className="text-xs text-primary/80">Já avaliaram</div>
+              </div>
+              <div className="bg-muted rounded-xl p-3">
+                <div className="text-2xl font-bold text-foreground">{status.total - status.voted}</div>
+                <div className="text-xs text-muted-foreground">Pendentes</div>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
+        {/* Quem não votou */}
         {status.not_voted.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
-            <h2 className="font-semibold text-gray-900 mb-3 text-sm">Ainda não avaliaram ({status.not_voted.length})</h2>
-            <div className="flex flex-wrap gap-2">
-              {status.not_voted.map(name => (
-                <span key={name} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">{name}</span>
-              ))}
-            </div>
-          </div>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm font-semibold mb-3">Ainda não avaliaram ({status.not_voted.length})</p>
+              <div className="flex flex-wrap gap-2">
+                {status.not_voted.map(name => (
+                  <Badge key={name} variant="secondary">{name}</Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Encerrar rodada */}
         {status.active_round?.status === 'drawn' && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <h2 className="font-semibold text-gray-900 mb-1">Encerrar rodada</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Confirme que a partida aconteceu. Após encerrada, substituições não serão mais possíveis.
-            </p>
-            <button
-              onClick={handleCloseRound}
-              disabled={closing}
-              className="w-full h-11 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-colors text-sm"
-            >
-              {closing ? 'Encerrando...' : 'Encerrar rodada'}
-            </button>
-          </div>
+          <Card>
+            <CardContent className="pt-5">
+              <p className="font-semibold text-sm mb-1">Encerrar rodada</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Confirme que a partida aconteceu. Após encerrada, substituições não são mais possíveis.
+              </p>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={handleCloseRound}
+                disabled={closing}
+              >
+                {closing ? 'Encerrando...' : 'Encerrar rodada'}
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
-        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500">Resultado e sorteio gerenciados em <strong>Rodada</strong>.</p>
-          <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline font-medium">Ir para Rodada →</Link>
+        <Separator />
+        <div className="flex items-center justify-between px-1">
+          <p className="text-sm text-muted-foreground">Resultado e sorteio em <strong>Rodada</strong>.</p>
+          <Link href="/admin/rodada" className="text-sm text-primary hover:underline">Ir para Rodada →</Link>
         </div>
       </div>
     </div>

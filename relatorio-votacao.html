@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório de Votação — Baba Lets</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding: 40px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
+      border-radius: 16px;
+    }
+
+    .header .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+    .header h1 { font-size: 32px; font-weight: 800; color: #f8fafc; margin-bottom: 6px; }
+    .header .subtitle { color: #94a3b8; font-size: 15px; }
+    .header .date { color: #64748b; font-size: 13px; margin-top: 6px; }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    /* ── STAT CARDS ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 40px; }
+    .stat-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 22px 20px;
+      text-align: center;
+    }
+    .stat-card .num { font-size: 38px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+    .stat-card .label { font-size: 13px; color: #94a3b8; }
+    .stat-card.green .num { color: #4ade80; }
+    .stat-card.blue .num { color: #60a5fa; }
+    .stat-card.amber .num { color: #fbbf24; }
+
+    /* ── DIDN'T VOTE ── */
+    .no-vote-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .badge.red { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+    .badge.gray { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+
+    /* ── POTES GRID ── */
+    .potes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    .pote-card {
+      background: #1e293b;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+
+    .pote-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pote-number {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .pote-label { font-size: 13px; font-weight: 700; color: #cbd5e1; }
+    .pote-desc  { font-size: 11px; color: #64748b; }
+
+    /* pote colors */
+    .pote-1 .pote-header { background: #1a1a2e; border-bottom: 2px solid #f59e0b; }
+    .pote-1 .pote-number { background: #f59e0b; color: #000; }
+    .pote-2 .pote-header { background: #1a1f2e; border-bottom: 2px solid #60a5fa; }
+    .pote-2 .pote-number { background: #60a5fa; color: #000; }
+    .pote-3 .pote-header { background: #1a2820; border-bottom: 2px solid #4ade80; }
+    .pote-3 .pote-number { background: #4ade80; color: #000; }
+    .pote-4 .pote-header { background: #1e1a2e; border-bottom: 2px solid #a78bfa; }
+    .pote-4 .pote-number { background: #a78bfa; color: #000; }
+    .pote-5 .pote-header { background: #2a1a1a; border-bottom: 2px solid #f87171; }
+    .pote-5 .pote-number { background: #f87171; color: #000; }
+    .pote-6 .pote-header { background: #1a2428; border-bottom: 2px solid #22d3ee; }
+    .pote-6 .pote-number { background: #22d3ee; color: #000; }
+
+    .pote-players { padding: 10px 0; }
+    .player-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      border-bottom: 1px solid #0f172a;
+    }
+    .player-row:last-child { border-bottom: none; }
+    .player-name { font-size: 14px; font-weight: 600; color: #f1f5f9; }
+    .player-votes {
+      font-size: 12px;
+      font-weight: 700;
+      background: #0f172a;
+      border-radius: 99px;
+      padding: 3px 10px;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    /* ── OUT TABLE ── */
+    .out-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .out-card {
+      background: #1c1414;
+      border: 1px solid #450a0a;
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .out-card .player-name { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 6px; }
+    .out-card .player-detail { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+    .out-card .player-detail strong { color: #e2e8f0; }
+
+    /* ── VOTE TABLE ── */
+    .votes-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #334155; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: #1e293b;
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      border-bottom: 1px solid #334155;
+    }
+    thead th.center { text-align: center; }
+    tbody tr { border-bottom: 1px solid #1e293b; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #1a2234; }
+    td { padding: 10px 14px; color: #e2e8f0; vertical-align: middle; }
+    td.center { text-align: center; }
+    td.name { font-weight: 600; }
+    td.no-vote { color: #f87171; font-size: 11px; font-weight: 600; }
+    td.voted { color: #4ade80; font-size: 11px; font-weight: 600; }
+    td.out { color: #f87171; }
+
+    .vote-cell {
+      display: inline-block;
+      min-width: 28px;
+      text-align: center;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .vote-best { background: #1d4ed8; color: #fff; }
+    .vote-high { color: #93c5fd; }
+    .vote-mid  { color: #64748b; }
+    .vote-low  { color: #334155; }
+    .vote-zero { color: #1e293b; }
+
+    /* ── INSIGHTS ── */
+    .insights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .insight-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .insight-card .icon { font-size: 22px; margin-bottom: 8px; display: block; }
+    .insight-card p { font-size: 13px; color: #94a3b8; line-height: 1.6; }
+    .insight-card p strong { color: #e2e8f0; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      margin-top: 48px;
+      color: #334155;
+      font-size: 12px;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: #fff; color: #0f172a; padding: 20px; }
+      .page { max-width: 100%; }
+      .stat-card, .pote-card, .out-card, .insight-card {
+        border: 1px solid #ccc;
+        background: #f9fafb;
+      }
+      .header { background: #f9fafb; border: 1px solid #ccc; }
+      .pote-1 .pote-header { background: #fef9c3; }
+      .pote-2 .pote-header { background: #dbeafe; }
+      .pote-3 .pote-header { background: #dcfce7; }
+      .pote-4 .pote-header { background: #f3e8ff; }
+      .pote-5 .pote-header { background: #fee2e2; }
+      .pote-6 .pote-header { background: #cffafe; }
+      .player-row { border-bottom: 1px solid #e5e7eb; }
+      .out-card { background: #fff5f5; border: 1px solid #fca5a5; }
+      tbody tr:hover { background: none; }
+      .vote-best { background: #2563eb; color: #fff; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <span class="emoji">⚽</span>
+    <h1>Relatório da Votação — Baba Lets</h1>
+    <div class="subtitle">Resultado completo da votação para formação dos potes</div>
+    <div class="date">03 de setembro de 2026</div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid">
+    <div class="stat-card blue">
+      <div class="num">22</div>
+      <div class="label">Participantes cadastrados</div>
+    </div>
+    <div class="stat-card green">
+      <div class="num">19</div>
+      <div class="label">Votaram <span style="font-size:11px">(86,4%)</span></div>
+    </div>
+    <div class="stat-card amber">
+      <div class="num">3</div>
+      <div class="label">Não votaram</div>
+    </div>
+  </div>
+
+  <!-- QUEM NÃO VOTOU -->
+  <div class="section">
+    <div class="section-title">Não votaram</div>
+    <div class="no-vote-list">
+      <span class="badge red">Micael</span>
+      <span class="badge red">Regis</span>
+      <span class="badge red">Robson</span>
+    </div>
+  </div>
+
+  <!-- RESULTADO DOS POTES -->
+  <div class="section">
+    <div class="section-title">Resultado final — Formação dos potes</div>
+    <div class="potes-grid">
+
+      <div class="pote-card pote-1">
+        <div class="pote-header">
+          <div class="pote-number">1</div>
+          <div>
+            <div class="pote-label">Pote 1</div>
+            <div class="pote-desc">Nível mais forte</div>
+          </div>
+        </div>
+        <div class="pote-players">
+          <div class="player-row">
+            <span class="player-name">Francisco Neto</span>
+            <span class="player-votes">15 votos no P1</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Wesley MotoPier</span>
+            <span class="player-votes">14 votos no P1</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Matheus</span>
+            <span class="player-votes">11 votos no P1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pote-card pote-2">
+        <div class="pote-header">
+          <div class="pote-number">2</div>
+          <div>
+            <div class="pote-label">Pote 2</div>
+            <div class="pote-desc"></div>
+          </div>
+        </div>
+        <div class="pote-players">
+          <div class="player-row">
+            <span class="player-name">Rafael Silva</span>
+            <span class="player-votes">9 votos no P2</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Thiago Vasconcelos</span>
+            <span class="player-votes">8 votos no P2</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Danilo</span>
+            <span class="player-votes">7 votos no P2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pote-card pote-3">
+        <div class="pote-header">
+          <div class="pote-number">3</div>
+          <div>
+            <div class="pote-label">Pote 3</div>
+            <div class="pote-desc"></div>
+          </div>
+        </div>
+        <div class="pote-players">
+          <div class="player-row">
+            <span class="player-name">Vinícius</span>
+            <span class="player-votes">8 votos no P3</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Marcos Lima</span>
+            <span class="player-votes">6 votos no P3</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Yan</span>
+            <span class="player-votes">5 votos no P3</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pote-card pote-4">
+        <div class="pote-header">
+          <div class="pote-number">4</div>
+          <div>
+            <div class="pote-label">Pote 4</div>
+            <div class="pote-desc"></div>
+          </div>
+        </div>
+        <div class="pote-players">
+          <div class="player-row">
+            <span class="player-name">Pedro Duarte</span>
+            <span class="player-votes">8 votos no P4</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Victor Moura</span>
+            <span class="player-votes">7 votos no P4</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Melo</span>
+            <span class="player-votes">7 votos no P4</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pote-card pote-5">
+        <div class="pote-header">
+          <div class="pote-number">5</div>
+          <div>
+            <div class="pote-label">Pote 5</div>
+            <div class="pote-desc"></div>
+          </div>
+        </div>
+        <div class="pote-players">
+          <div class="player-row">
+            <span class="player-name">Regis ⚠️</span>
+            <span class="player-votes">9 votos no P5</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Denisson</span>
+            <span class="player-votes">8 votos no P5</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Temóteo</span>
+            <span class="player-votes">5 votos no P5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pote-card pote-6">
+        <div class="pote-header">
+          <div class="pote-number">6</div>
+          <div>
+            <div class="pote-label">Pote 6</div>
+            <div class="pote-desc">Nível mais fraco</div>
+          </div>
+        </div>
+        <div class="pote-players">
+          <div class="player-row">
+            <span class="player-name">Igor</span>
+            <span class="player-votes">9 votos no P6</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Hugo</span>
+            <span class="player-votes">8 votos no P6</span>
+          </div>
+          <div class="player-row">
+            <span class="player-name">Juan</span>
+            <span class="player-votes">8 votos no P6</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p style="margin-top:10px;font-size:11px;color:#475569;">
+      ⚠️ Regis não votou, mas foi suficientemente votado para entrar no pote 5.
+    </p>
+  </div>
+
+  <!-- FICARAM DE FORA -->
+  <div class="section">
+    <div class="section-title">Ficaram de fora (22 participantes — 18 vagas = 4 excluídos)</div>
+    <div class="out-cards">
+      <div class="out-card">
+        <div class="player-name">Robson</div>
+        <div class="player-detail">
+          <strong>Não votou.</strong> Melhor posição: Pote 2 com 7 votos.<br>
+          Perdeu a vaga para Danilo pelo critério de desempate — ambos tinham <strong>7 votos no Pote 2</strong>, mas Danilo entrou primeiro na ordenação interna.
+        </div>
+      </div>
+      <div class="out-card">
+        <div class="player-name">Micael</div>
+        <div class="player-detail">
+          <strong>Não votou.</strong> Melhor posição: Pote 4 com 7 votos.<br>
+          Perdeu a vaga para Melo pelo critério de desempate — ambos tinham <strong>7 votos no Pote 4</strong>, mas Melo entrou primeiro na ordenação interna.
+        </div>
+      </div>
+      <div class="out-card">
+        <div class="player-name">Thiago Wesley MR</div>
+        <div class="player-detail">
+          Votou. Melhor posição: <strong>5 votos no Pote 5</strong> e 5 votos no Pote 6.<br>
+          Quando chegou sua vez no Pote 5, Regis + Denisson + Temóteo já tinham preenchido as vagas. Pote 6 também estava cheio.
+        </div>
+      </div>
+      <div class="out-card">
+        <div class="player-name">Pedro Carneiro</div>
+        <div class="player-detail">
+          Votou. Melhor posição: <strong>5 votos no Pote 5</strong> e 4 votos no Pote 6.<br>
+          Mesmo situação — Pote 5 e Pote 6 já estavam lotados quando chegou sua vez no algoritmo.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABELA COMPLETA DE VOTOS -->
+  <div class="section">
+    <div class="section-title">Votos recebidos por participante — distribuição por pote</div>
+    <div class="votes-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Jogador</th>
+            <th class="center">Votou</th>
+            <th class="center">P1</th>
+            <th class="center">P2</th>
+            <th class="center">P3</th>
+            <th class="center">P4</th>
+            <th class="center">P5</th>
+            <th class="center">P6</th>
+            <th class="center">Total</th>
+            <th>Pote final</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Pote 1 -->
+          <tr>
+            <td class="name">Francisco Neto</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-best">15</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge" style="background:#451a03;color:#fbbf24;border:1px solid #78350f;">Pote 1</span></td>
+          </tr>
+          <tr>
+            <td class="name">Wesley MotoPier</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-best">14</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><strong>17</strong></td>
+            <td><span class="badge" style="background:#451a03;color:#fbbf24;border:1px solid #78350f;">Pote 1</span></td>
+          </tr>
+          <tr>
+            <td class="name">Matheus</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-best">11</span></td>
+            <td class="center"><span class="vote-cell vote-mid">4</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge" style="background:#451a03;color:#fbbf24;border:1px solid #78350f;">Pote 1</span></td>
+          </tr>
+          <!-- Pote 2 -->
+          <tr>
+            <td class="name">Rafael Silva</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-mid">6</span></td>
+            <td class="center"><span class="vote-cell vote-best">9</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><strong>17</strong></td>
+            <td><span class="badge" style="background:#172554;color:#60a5fa;border:1px solid #1e3a8a;">Pote 2</span></td>
+          </tr>
+          <tr>
+            <td class="name">Thiago Vasconcelos</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-best">8</span></td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge" style="background:#172554;color:#60a5fa;border:1px solid #1e3a8a;">Pote 2</span></td>
+          </tr>
+          <tr>
+            <td class="name">Danilo</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-best">7</span></td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge" style="background:#172554;color:#60a5fa;border:1px solid #1e3a8a;">Pote 2</span></td>
+          </tr>
+          <!-- Pote 3 -->
+          <tr>
+            <td class="name">Vinícius</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-mid">6</span></td>
+            <td class="center"><span class="vote-cell vote-best">8</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge" style="background:#052e16;color:#4ade80;border:1px solid #14532d;">Pote 3</span></td>
+          </tr>
+          <tr>
+            <td class="name">Marcos Lima</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-best">6</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><strong>14</strong></td>
+            <td><span class="badge" style="background:#052e16;color:#4ade80;border:1px solid #14532d;">Pote 3</span></td>
+          </tr>
+          <tr>
+            <td class="name">Yan</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-best">5</span></td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><strong>13</strong></td>
+            <td><span class="badge" style="background:#052e16;color:#4ade80;border:1px solid #14532d;">Pote 3</span></td>
+          </tr>
+          <!-- Pote 4 -->
+          <tr>
+            <td class="name">Pedro Duarte</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><span class="vote-cell vote-best">8</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><strong>17</strong></td>
+            <td><span class="badge" style="background:#2e1065;color:#a78bfa;border:1px solid #4c1d95;">Pote 4</span></td>
+          </tr>
+          <tr>
+            <td class="name">Victor Moura</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><span class="vote-cell vote-best">7</span></td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge" style="background:#2e1065;color:#a78bfa;border:1px solid #4c1d95;">Pote 4</span></td>
+          </tr>
+          <tr>
+            <td class="name">Melo</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-mid">6</span></td>
+            <td class="center"><span class="vote-cell vote-best">7</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><strong>17</strong></td>
+            <td><span class="badge" style="background:#2e1065;color:#a78bfa;border:1px solid #4c1d95;">Pote 4</span></td>
+          </tr>
+          <!-- Pote 5 -->
+          <tr>
+            <td class="name">Regis ⚠️</td>
+            <td class="center no-vote">Não</td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-mid">4</span></td>
+            <td class="center"><span class="vote-cell vote-best">9</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge" style="background:#450a0a;color:#f87171;border:1px solid #7f1d1d;">Pote 5</span></td>
+          </tr>
+          <tr>
+            <td class="name">Denisson</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><span class="vote-cell vote-best">8</span></td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><strong>17</strong></td>
+            <td><span class="badge" style="background:#450a0a;color:#f87171;border:1px solid #7f1d1d;">Pote 5</span></td>
+          </tr>
+          <tr>
+            <td class="name">Temóteo</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-best">5</span></td>
+            <td class="center"><span class="vote-cell vote-mid">6</span></td>
+            <td class="center"><strong>12</strong></td>
+            <td><span class="badge" style="background:#450a0a;color:#f87171;border:1px solid #7f1d1d;">Pote 5</span></td>
+          </tr>
+          <!-- Pote 6 -->
+          <tr>
+            <td class="name">Igor</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-mid">4</span></td>
+            <td class="center"><span class="vote-cell vote-best">9</span></td>
+            <td class="center"><strong>14</strong></td>
+            <td><span class="badge" style="background:#083344;color:#22d3ee;border:1px solid #155e75;">Pote 6</span></td>
+          </tr>
+          <tr>
+            <td class="name">Hugo</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-best">8</span></td>
+            <td class="center"><strong>9</strong></td>
+            <td><span class="badge" style="background:#083344;color:#22d3ee;border:1px solid #155e75;">Pote 6</span></td>
+          </tr>
+          <tr>
+            <td class="name">Juan</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-best">8</span></td>
+            <td class="center"><strong>10</strong></td>
+            <td><span class="badge" style="background:#083344;color:#22d3ee;border:1px solid #155e75;">Pote 6</span></td>
+          </tr>
+          <!-- Fora -->
+          <tr style="opacity:0.55;">
+            <td class="name out">Robson ✗</td>
+            <td class="center no-vote">Não</td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><span class="vote-cell vote-best">7</span></td>
+            <td class="center"><span class="vote-cell vote-mid">4</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><strong>18</strong></td>
+            <td><span class="badge red">Fora</span></td>
+          </tr>
+          <tr style="opacity:0.55;">
+            <td class="name out">Micael ✗</td>
+            <td class="center no-vote">Não</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-mid">3</span></td>
+            <td class="center"><span class="vote-cell vote-best">7</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><strong>16</strong></td>
+            <td><span class="badge red">Fora</span></td>
+          </tr>
+          <tr style="opacity:0.55;">
+            <td class="name out">Thiago Wesley MR ✗</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-mid">2</span></td>
+            <td class="center"><span class="vote-cell vote-best">5</span></td>
+            <td class="center"><span class="vote-cell vote-mid">5</span></td>
+            <td class="center"><strong>13</strong></td>
+            <td><span class="badge red">Fora</span></td>
+          </tr>
+          <tr style="opacity:0.55;">
+            <td class="name out">Pedro Carneiro ✗</td>
+            <td class="center voted">Sim</td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-zero">—</span></td>
+            <td class="center"><span class="vote-cell vote-low">1</span></td>
+            <td class="center"><span class="vote-cell vote-best">5</span></td>
+            <td class="center"><span class="vote-cell vote-mid">4</span></td>
+            <td class="center"><strong>10</strong></td>
+            <td><span class="badge red">Fora</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:8px;font-size:11px;color:#475569;">
+      O número em destaque (azul) indica o pote onde o jogador recebeu mais votos. Os outros potes são secundários.
+    </p>
+  </div>
+
+  <!-- DESTAQUES -->
+  <div class="section">
+    <div class="section-title">Destaques da votação</div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <span class="icon">🎯</span>
+        <p><strong>Pote 1 foi quase unânime.</strong> Francisco Neto recebeu 15 de 18 votos no pote 1, Wesley MotoPier 14 e Matheus 11. A galera concordou muito sobre quem são os melhores.</p>
+      </div>
+      <div class="insight-card">
+        <span class="icon">⚽</span>
+        <p><strong>8 jogadores receberam votos de todos os eleitores.</strong> Francisco Neto, Matheus, Danilo, Thiago Vasconcelos, Robson, Regis, Vinícius e Victor Moura foram lembrados por todo mundo.</p>
+      </div>
+      <div class="insight-card">
+        <span class="icon">⚠️</span>
+        <p><strong>Regis não votou e mesmo assim entrou no Pote 5</strong> com 9 votos — o maior no pote 5. Já Robson e Micael, que também não votaram, ficaram de fora.</p>
+      </div>
+      <div class="insight-card">
+        <span class="icon">🎲</span>
+        <p><strong>Robson e Micael perderam por desempate técnico.</strong> Ambos tinham os mesmos votos que os concorrentes (7 votos no pote 2 e pote 4), mas o algoritmo usou ordem interna como critério.</p>
+      </div>
+      <div class="insight-card">
+        <span class="icon">📊</span>
+        <p><strong>Hugo entrou com apenas 9 votos no total</strong>, mas 8 deles concentrados no Pote 6 — passou confortavelmente. Já Pedro Carneiro teve 10 votos, mas dispersos entre potes já cheios.</p>
+      </div>
+      <div class="insight-card">
+        <span class="icon">🕐</span>
+        <p><strong>Toda a votação aconteceu em um único dia</strong> (02/09/2026), entre 20h23 e 23h13, com Thiago Vasconcelos abrindo a votação e Wesley MotoPier votando no dia seguinte (03/09).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Gerado em 03/09/2026 · Baba Lets · Sistema de votação por potes
+  </div>
+
+</div>
+</body>
+</html>

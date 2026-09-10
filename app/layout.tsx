@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { Toaster } from '@/components/ui/sonner'
 
-// Analytics e Speed Insights só ativos no Vercel
 const VercelAnalytics = process.env.VERCEL
   ? require('@vercel/analytics/next').Analytics
   : () => null
@@ -27,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR">
       <body className={inter.className}>
         {children}
+        <Toaster richColors position="top-center" />
         <VercelAnalytics />
         <VercelSpeedInsights />
       </body>

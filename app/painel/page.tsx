@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { formatDate, formatDateLong } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { toast } from 'sonner'
 
 interface HistoryEntry {
   round_id: number
@@ -17,11 +22,7 @@ interface HistoryEntry {
   active: boolean
 }
 
-interface PoteEntry {
-  pote: number
-  player_id: number
-  name: string
-}
+interface PoteEntry { pote: number; player_id: number; name: string }
 
 interface ActiveRound {
   id: number
@@ -56,32 +57,23 @@ interface AwardsData {
   my_vote: { mvp_id: number; pereba_id: number } | null
 }
 
-const POTE_BADGE: Record<number, string> = {
-  1: 'bg-blue-900 text-white',
-  2: 'bg-blue-700 text-white',
-  3: 'bg-blue-500 text-white',
-  4: 'bg-gray-500 text-white',
-  5: 'bg-gray-400 text-white',
-  6: 'bg-gray-300 text-gray-700',
-}
-
-const TEAM_COLOR: Record<number, string> = {
-  1: 'bg-blue-100 text-blue-800 border border-blue-200',
-  2: 'bg-sky-100 text-sky-800 border border-sky-200',
-  3: 'bg-orange-100 text-orange-800 border border-orange-200',
+const POTE_BADGE_CLS: Record<number, string> = {
+  1: 'bg-blue-900 text-white border-0',
+  2: 'bg-blue-700 text-white border-0',
+  3: 'bg-blue-500 text-white border-0',
+  4: 'bg-slate-500 text-white border-0',
+  5: 'bg-slate-400 text-white border-0',
+  6: 'bg-slate-200 text-slate-700 border-0',
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: 'Em preparação',
-  open: 'Aberta',
-  closed: 'Encerrada',
-  drawn: 'Sorteada',
+  draft: 'Em preparação', open: 'Aberta', closed: 'Encerrada', drawn: 'Sorteada',
 }
 
-const ATTENDANCE_LABEL: Record<string, { label: string; className: string }> = {
-  confirmed: { label: 'Jogou', className: 'bg-blue-100 text-blue-700' },
-  absent: { label: 'Ausente', className: 'bg-red-100 text-red-600' },
-  suplente: { label: 'Suplente', className: 'bg-yellow-100 text-yellow-700' },
+const ATTENDANCE_LABEL: Record<string, { label: string; cls: string }> = {
+  confirmed: { label: 'Jogou',    cls: 'bg-primary/10 text-primary border-primary/20' },
+  absent:    { label: 'Ausente',  cls: 'bg-destructive/10 text-destructive border-destructive/20' },
+  suplente:  { label: 'Suplente', cls: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
 }
 
 export default function PainelPage() {
@@ -90,17 +82,14 @@ export default function PainelPage() {
   const [voterName, setVoterName] = useState('')
   const [data, setData] = useState<HistoricoData | null>(null)
   const [lista, setLista] = useState<ListaPresenca | null>(null)
-  const [voteCount, setVoteCount] = useState<number>(0)
+  const [voteCount, setVoteCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [checkingIn, setCheckingIn] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
   const [listaAberta, setListaAberta] = useState(false)
   const [awards, setAwards] = useState<AwardsData | null>(null)
-  const [selectedMvp, setSelectedMvp] = useState<string>('')
-  const [selectedPereba, setSelectedPereba] = useState<string>('')
+  const [selectedMvp, setSelectedMvp] = useState('')
+  const [selectedPereba, setSelectedPereba] = useState('')
   const [submittingAward, setSubmittingAward] = useState(false)
-  const [awardMessage, setAwardMessage] = useState('')
 
   const loadData = useCallback(async (id: number) => {
     const [hist, votes, presenca] = await Promise.all([
@@ -127,8 +116,7 @@ export default function PainelPage() {
     const name = sessionStorage.getItem('baba_voter_name')
     if (!id || !name) { router.replace('/'); return }
     const numId = Number(id)
-    setVoterId(numId)
-    setVoterName(name)
+    setVoterId(numId); setVoterName(name)
     loadData(numId).then(() => setLoading(false))
   }, [router, loadData])
 
@@ -139,53 +127,40 @@ export default function PainelPage() {
     const res = await fetch('/api/awards', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        voter_id: voterId,
-        round_id: activeRound.id,
-        mvp_id: Number(selectedMvp),
-        pereba_id: Number(selectedPereba),
-      }),
+      body: JSON.stringify({ voter_id: voterId, round_id: activeRound.id, mvp_id: Number(selectedMvp), pereba_id: Number(selectedPereba) }),
     })
     const result = await res.json()
-    if (!res.ok) {
-      setAwardMessage(result.error || 'Erro ao salvar')
-    } else {
-      setAwardMessage('Voto salvo!')
+    if (!res.ok) { toast.error(result.error || 'Erro ao salvar') }
+    else {
+      toast.success(awards?.my_vote ? 'Voto atualizado!' : 'Voto salvo!')
       const awardsData = await fetch(`/api/awards?round_id=${activeRound.id}&voter_id=${voterId}`).then(r => r.json())
       setAwards(awardsData)
     }
-    setTimeout(() => setAwardMessage(''), 3000)
     setSubmittingAward(false)
   }
 
   async function handleCheckin(confirmar: boolean) {
     if (!voterId) return
     setCheckingIn(true)
-    setError('')
     const res = await fetch('/api/checkin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ player_id: voterId, confirmar }),
     })
     const result = await res.json()
-    if (!res.ok) {
-      setError(result.error || 'Erro ao processar')
-    } else {
-      if (result.suplente) {
-        setMessage('Você está na lista de suplentes. Aguarde uma vaga!')
-      } else {
-        setMessage(confirmar ? 'Presença confirmada!' : 'Presença cancelada.')
-      }
+    if (!res.ok) { toast.error(result.error || 'Erro ao processar') }
+    else {
+      if (result.suplente) toast.info('Você está na lista de suplentes. Aguarde uma vaga!')
+      else toast.success(confirmar ? 'Presença confirmada!' : 'Presença cancelada.')
       await loadData(voterId)
-      setTimeout(() => setMessage(''), 4000)
     }
     setCheckingIn(false)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-400">Carregando...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Carregando...</p>
       </div>
     )
   }
@@ -200,423 +175,329 @@ export default function PainelPage() {
   const vagas = activeRound ? 18 - activeRound.confirmados : 0
 
   const roundCardLabel = activeRound?.status === 'closed'
-    ? 'Última rodada'
-    : activeRound?.status === 'drawn'
-    ? 'Rodada atual'
-    : 'Próxima rodada'
+    ? 'Última rodada' : activeRound?.status === 'drawn' ? 'Rodada atual' : 'Próxima rodada'
+
+  const cardBorder = isConfirmed ? 'border-primary' : isSuplente ? 'border-yellow-400' : isAbsent ? 'border-destructive/50' : 'border-border'
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="Let's Baba" width={120} height={40} className="h-9 w-auto" priority />
-            <p className="text-sm text-gray-500 border-l border-gray-200 pl-3">{voterName}</p>
+            <p className="text-sm text-muted-foreground border-l border-border pl-3">{voterName}</p>
           </div>
-          <button
-            onClick={() => { sessionStorage.clear(); router.replace('/') }}
-            className="text-xs text-gray-400 hover:text-gray-600"
-          >
+          <Button variant="ghost" size="sm" onClick={() => { sessionStorage.clear(); router.replace('/') }}>
             Sair
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-        {message && (
-          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
-            {message}
-          </div>
-        )}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center">
-            {error}
-          </div>
-        )}
-
         {/* Card da rodada */}
         {activeRound ? (
-          <div className={`rounded-2xl border-2 p-5 transition-colors ${
-            isConfirmed ? 'border-blue-500 bg-blue-50'
-            : isSuplente ? 'border-yellow-400 bg-yellow-50'
-            : isAbsent ? 'border-red-300 bg-red-50'
-            : 'border-gray-200 bg-white'
-          }`}>
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{roundCardLabel}</p>
-                <p className="font-bold text-gray-900 text-lg leading-tight">
-                  {formatDateLong(activeRound.scheduled_date)}
+          <Card className={`border-2 ${cardBorder}`}>
+            <CardContent className="pt-5">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{roundCardLabel}</p>
+                  <p className="font-bold text-lg leading-tight">{formatDateLong(activeRound.scheduled_date)}</p>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <Badge variant={activeRound.status === 'drawn' ? 'default' : 'secondary'} className="text-xs">
+                      {STATUS_LABEL[activeRound.status] ?? activeRound.status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {activeRound.confirmados}/18
+                      {!isConfirmed && !isSuplente && vagas > 0 && !roundClosed && (
+                        <span className="text-primary font-medium"> · {vagas} vaga{vagas !== 1 ? 's' : ''}</span>
+                      )}
+                      {!isConfirmed && !isSuplente && vagas === 0 && !roundClosed && (
+                        <span className="text-destructive font-medium"> · lotado</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-shrink-0 text-center">
+                  {isConfirmed ? (
+                    <>
+                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xl">✓</div>
+                      <p className="text-xs text-primary font-medium mt-1">Confirmado</p>
+                    </>
+                  ) : isSuplente ? (
+                    <>
+                      <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-white text-xl">⏳</div>
+                      <p className="text-xs text-yellow-700 font-medium mt-1">Suplente</p>
+                    </>
+                  ) : isAbsent ? (
+                    <>
+                      <div className="w-12 h-12 rounded-full bg-destructive/80 flex items-center justify-center text-white text-xl">✗</div>
+                      <p className="text-xs text-destructive font-medium mt-1">Ausente</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-2xl">?</div>
+                      <p className="text-xs text-muted-foreground mt-1">Pendente</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Pote e time */}
+              {isConfirmed && (activeEntry?.pote || activeEntry?.team) && (
+                <div className="flex items-center gap-2 mb-4">
+                  {activeEntry.pote && (
+                    <Badge className={`${POTE_BADGE_CLS[activeEntry.pote]}`}>Pote {activeEntry.pote}</Badge>
+                  )}
+                  {activeEntry.team && (
+                    <Badge variant="outline">Time {activeEntry.team}</Badge>
+                  )}
+                </div>
+              )}
+
+              {isSuplente && (
+                <p className="text-xs text-yellow-700 bg-yellow-50 rounded-lg px-3 py-2 mb-4">
+                  Você confirmou presença, mas a rodada está cheia. Se alguém cancelar, o admin pode te incluir.
                 </p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    activeRound.status === 'drawn' ? 'bg-blue-100 text-blue-700'
-                    : activeRound.status === 'closed' ? 'bg-gray-100 text-gray-500'
-                    : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {STATUS_LABEL[activeRound.status] ?? activeRound.status}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {activeRound.confirmados}/18 confirmados
-                    {!isConfirmed && !isSuplente && vagas > 0 && !roundClosed && (
-                      <span className="text-blue-600 font-medium"> · {vagas} vaga{vagas !== 1 ? 's' : ''}</span>
-                    )}
-                    {!isConfirmed && !isSuplente && vagas === 0 && !roundClosed && (
-                      <span className="text-red-500 font-medium"> · lotado</span>
-                    )}
-                  </span>
-                </div>
-              </div>
+              )}
 
-              <div className="flex-shrink-0 text-center">
-                {isConfirmed ? (
-                  <>
-                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl">✓</div>
-                    <p className="text-xs text-blue-700 font-medium mt-1">Confirmado</p>
-                  </>
-                ) : isSuplente ? (
-                  <>
-                    <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-white text-xl">⏳</div>
-                    <p className="text-xs text-yellow-700 font-medium mt-1">Suplente</p>
-                  </>
+              {/* Botões de ação */}
+              {!roundClosed && (
+                isConfirmed || isSuplente ? (
+                  <Button variant="outline" className="w-full border-destructive/40 text-destructive hover:bg-destructive/5"
+                    onClick={() => handleCheckin(false)} disabled={checkingIn}>
+                    {checkingIn ? '...' : 'Cancelar presença'}
+                  </Button>
                 ) : isAbsent ? (
-                  <>
-                    <div className="w-12 h-12 rounded-full bg-red-400 flex items-center justify-center text-white text-xl">✗</div>
-                    <p className="text-xs text-red-600 font-medium mt-1">Ausente</p>
-                  </>
+                  <Button className="w-full" size="lg" onClick={() => handleCheckin(true)} disabled={checkingIn}>
+                    {checkingIn ? 'Confirmando...' : 'Confirmar presença'}
+                  </Button>
                 ) : (
-                  <>
-                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-2xl">?</div>
-                    <p className="text-xs text-gray-400 mt-1">Pendente</p>
-                  </>
-                )}
-              </div>
-            </div>
+                  <div className="flex gap-3">
+                    <Button className="flex-1" size="lg" onClick={() => handleCheckin(true)} disabled={checkingIn}>
+                      {checkingIn ? '...' : 'Confirmar presença'}
+                    </Button>
+                    <Button variant="outline" className="flex-1 border-destructive/40 text-destructive hover:bg-destructive/5"
+                      size="lg" onClick={() => handleCheckin(false)} disabled={checkingIn}>
+                      {checkingIn ? '...' : 'Não vou'}
+                    </Button>
+                  </div>
+                )
+              )}
 
-            {/* Pote e time do jogador */}
-            {isConfirmed && (activeEntry?.pote || activeEntry?.team) && (
-              <div className="flex items-center gap-2 mb-4">
-                {activeEntry.pote && (
-                  <span className={`text-sm font-bold px-3 py-1 rounded-full ${POTE_BADGE[activeEntry.pote]}`}>
-                    Pote {activeEntry.pote}
-                  </span>
-                )}
-                {activeEntry.team && (
-                  <span className={`text-sm font-bold px-3 py-1 rounded-full ${TEAM_COLOR[activeEntry.team]}`}>
-                    Time {activeEntry.team}
-                  </span>
-                )}
-              </div>
-            )}
+              {roundClosed && isConfirmed && (
+                <Link href="/resultado">
+                  <Button className="w-full" size="lg">Ver resultado →</Button>
+                </Link>
+              )}
 
-            {isSuplente && (
-              <p className="text-xs text-yellow-700 mb-4">
-                Você confirmou presença, mas a rodada está cheia. Se alguém cancelar, o admin pode te incluir.
-              </p>
-            )}
-
-            {/* Botões de ação */}
-            {!roundClosed && (
-              isConfirmed || isSuplente ? (
-                <button
-                  onClick={() => handleCheckin(false)}
-                  disabled={checkingIn}
-                  className="w-full h-11 border-2 border-red-300 text-red-600 hover:bg-red-50 font-semibold rounded-xl transition-colors text-sm disabled:opacity-50"
-                >
-                  {checkingIn ? '...' : 'Cancelar presença'}
-                </button>
-              ) : isAbsent ? (
-                <button
-                  onClick={() => handleCheckin(true)}
-                  disabled={checkingIn}
-                  className="w-full h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-bold rounded-xl transition-colors"
-                >
-                  {checkingIn ? 'Confirmando...' : 'Confirmar presença'}
-                </button>
-              ) : (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleCheckin(true)}
-                    disabled={checkingIn}
-                    className="flex-1 h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-bold rounded-xl transition-colors text-sm"
-                  >
-                    {checkingIn ? '...' : 'Confirmar presença'}
-                  </button>
-                  <button
-                    onClick={() => handleCheckin(false)}
-                    disabled={checkingIn}
-                    className="flex-1 h-12 border-2 border-red-300 text-red-600 hover:bg-red-50 font-semibold rounded-xl transition-colors text-sm disabled:opacity-50"
-                  >
-                    {checkingIn ? '...' : 'Não vou'}
-                  </button>
-                </div>
-              )
-            )}
-
-            {roundClosed && isConfirmed && (
-              <Link
-                href="/resultado"
-                className="block w-full h-11 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-xl transition-colors text-sm text-center leading-[2.75rem]"
-              >
-                Ver resultado →
-              </Link>
-            )}
-
-            {/* Potes da rodada — dentro do card, visível a todos */}
-            {activeRound.potes.length > 0 && (
-              <div className="mt-5 pt-4 border-t border-gray-200/60">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Potes da rodada</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[1, 2, 3, 4, 5, 6].map(pote => {
-                    const jogadores = activeRound.potes.filter(p => p.pote === pote)
-                    if (jogadores.length === 0) return null
-                    return (
-                      <div key={pote} className="rounded-xl bg-white/70 border border-gray-200 p-2.5">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full inline-block mb-1.5 ${POTE_BADGE[pote]}`}>
-                          Pote {pote}
-                        </span>
-                        <div className="space-y-0.5">
-                          {jogadores.map(j => (
-                            <p
-                              key={j.player_id}
-                              className={`text-xs truncate ${j.player_id === voterId ? 'font-bold text-blue-700' : 'text-gray-700'}`}
-                            >
-                              {j.player_id === voterId ? '▶ ' : ''}{j.name}
-                            </p>
-                          ))}
+              {/* Potes da rodada */}
+              {activeRound.potes.length > 0 && (
+                <>
+                  <Separator className="my-4" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Potes da rodada</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[1,2,3,4,5,6].map(pote => {
+                      const jogadores = activeRound.potes.filter(p => p.pote === pote)
+                      if (!jogadores.length) return null
+                      return (
+                        <div key={pote} className="rounded-lg bg-muted/40 p-2.5">
+                          <Badge className={`text-xs mb-1.5 ${POTE_BADGE_CLS[pote]}`}>Pote {pote}</Badge>
+                          <div className="space-y-0.5">
+                            {jogadores.map(j => (
+                              <p key={j.player_id}
+                                className={`text-xs truncate ${j.player_id === voterId ? 'font-bold text-primary' : 'text-foreground'}`}>
+                                {j.player_id === voterId ? '▶ ' : ''}{j.name}
+                              </p>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 text-center">
-            <p className="text-3xl mb-2">📅</p>
-            <p className="text-gray-500 text-sm">Nenhuma rodada agendada no momento.</p>
-            <p className="text-gray-400 text-xs mt-1">O admin vai cadastrar quando tiver data definida.</p>
-          </div>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-3xl mb-2">📅</p>
+              <p className="text-muted-foreground text-sm">Nenhuma rodada agendada no momento.</p>
+              <p className="text-muted-foreground/60 text-xs mt-1">O admin vai cadastrar quando tiver data definida.</p>
+            </CardContent>
+          </Card>
         )}
 
-        {/* MVP e Pereba da rodada */}
+        {/* MVP e Pereba */}
         {activeRound && roundClosed && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 text-sm">MVP e Pereba da rodada</h2>
-              <p className="text-xs text-gray-400">Escolha o melhor e o pior da pelada</p>
-            </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">MVP e Pereba da rodada</CardTitle>
+              <p className="text-xs text-muted-foreground">Escolha o melhor e o pior da pelada</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {activeRound.potes.length > 0 && (
+                <form onSubmit={handleAwardSubmit} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-yellow-600 mb-1">🏆 MVP</label>
+                      <select value={selectedMvp} onChange={e => setSelectedMvp(e.target.value)}
+                        className="w-full h-10 px-2 border border-input rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" required>
+                        <option value="">Escolher...</option>
+                        {activeRound.potes.filter(p => p.player_id !== voterId).map(p => (
+                          <option key={p.player_id} value={p.player_id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-red-500 mb-1">💩 Pereba</label>
+                      <select value={selectedPereba} onChange={e => setSelectedPereba(e.target.value)}
+                        className="w-full h-10 px-2 border border-input rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" required>
+                        <option value="">Escolher...</option>
+                        {activeRound.potes.filter(p => p.player_id !== voterId && String(p.player_id) !== selectedMvp).map(p => (
+                          <option key={p.player_id} value={p.player_id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <Button type="submit" variant="secondary" className="w-full"
+                    disabled={submittingAward || !selectedMvp || !selectedPereba}>
+                    {submittingAward ? 'Salvando...' : awards?.my_vote ? 'Atualizar voto' : 'Salvar voto'}
+                  </Button>
+                </form>
+              )}
 
-            {/* Formulário de votação */}
-            {activeRound.potes.length > 0 && (
-              <form onSubmit={handleAwardSubmit} className="p-4 space-y-3 border-b border-gray-100">
+              {awards && (awards.mvp.length > 0 || awards.pereba.length > 0) && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-yellow-600 mb-1">🏆 MVP</label>
-                    <select
-                      value={selectedMvp}
-                      onChange={e => setSelectedMvp(e.target.value)}
-                      className="w-full h-10 px-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
-                      required
-                    >
-                      <option value="">Escolher...</option>
-                      {activeRound.potes
-                        .filter(p => p.player_id !== voterId)
-                        .map(p => (
-                          <option key={p.player_id} value={p.player_id}>{p.name}</option>
-                        ))}
-                    </select>
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-yellow-600 mb-2">🏆 MVP</p>
+                    <div className="space-y-1">
+                      {awards.mvp.slice(0, 5).map((a, i) => (
+                        <div key={a.player_id} className="flex items-center justify-between gap-1">
+                          <span className={`text-xs truncate ${i === 0 ? 'font-bold' : 'text-muted-foreground'}`}>
+                            {i === 0 ? '★ ' : ''}{a.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{a.votes}v</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-red-500 mb-1">💩 Pereba</label>
-                    <select
-                      value={selectedPereba}
-                      onChange={e => setSelectedPereba(e.target.value)}
-                      className="w-full h-10 px-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-white"
-                      required
-                    >
-                      <option value="">Escolher...</option>
-                      {activeRound.potes
-                        .filter(p => p.player_id !== voterId && String(p.player_id) !== selectedMvp)
-                        .map(p => (
-                          <option key={p.player_id} value={p.player_id}>{p.name}</option>
-                        ))}
-                    </select>
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-red-500 mb-2">💩 Pereba</p>
+                    <div className="space-y-1">
+                      {awards.pereba.slice(0, 5).map((a, i) => (
+                        <div key={a.player_id} className="flex items-center justify-between gap-1">
+                          <span className={`text-xs truncate ${i === 0 ? 'font-bold' : 'text-muted-foreground'}`}>
+                            {i === 0 ? '👎 ' : ''}{a.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{a.votes}v</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                {awardMessage && (
-                  <p className="text-xs text-center font-medium text-blue-700">{awardMessage}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={submittingAward || !selectedMvp || !selectedPereba}
-                  className="w-full h-10 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm transition-colors"
-                >
-                  {submittingAward ? 'Salvando...' : awards?.my_vote ? 'Atualizar voto' : 'Salvar voto'}
-                </button>
-              </form>
-            )}
-
-            {/* Resultado parcial */}
-            {awards && (awards.mvp.length > 0 || awards.pereba.length > 0) && (
-              <div className="grid grid-cols-2 divide-x divide-gray-100">
-                <div className="p-4">
-                  <p className="text-xs font-semibold text-yellow-600 mb-2">🏆 MVP</p>
-                  <div className="space-y-1.5">
-                    {awards.mvp.slice(0, 5).map((a, i) => (
-                      <div key={a.player_id} className="flex items-center justify-between gap-2">
-                        <span className={`text-xs truncate ${i === 0 ? 'font-bold text-gray-900' : 'text-gray-500'}`}>
-                          {i === 0 ? '★ ' : ''}{a.name}
-                        </span>
-                        <span className="text-xs text-gray-400 flex-shrink-0">{a.votes}v</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p className="text-xs font-semibold text-red-500 mb-2">💩 Pereba</p>
-                  <div className="space-y-1.5">
-                    {awards.pereba.slice(0, 5).map((a, i) => (
-                      <div key={a.player_id} className="flex items-center justify-between gap-2">
-                        <span className={`text-xs truncate ${i === 0 ? 'font-bold text-gray-900' : 'text-gray-500'}`}>
-                          {i === 0 ? '👎 ' : ''}{a.name}
-                        </span>
-                        <span className="text-xs text-gray-400 flex-shrink-0">{a.votes}v</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
-        {/* Lista de presença pública */}
+        {/* Lista de presença */}
         {lista?.round && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <Card>
             <button
-              className="w-full px-4 py-3 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 text-left"
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 text-left rounded-t-xl"
               onClick={() => setListaAberta(v => !v)}
             >
               <div>
-                <h2 className="font-semibold text-gray-900 text-sm">Lista de presença</h2>
-                <p className="text-xs text-gray-400">
+                <p className="font-semibold text-sm">Lista de presença</p>
+                <p className="text-xs text-muted-foreground">
                   {lista.confirmados.length} confirmados
                   {lista.suplentes.length > 0 ? ` · ${lista.suplentes.length} suplentes` : ''}
                   {` · ${lista.ausentes.length} ausentes · ${lista.pendentes.length} sem resposta`}
                 </p>
               </div>
-              <span className="text-gray-400 text-xs ml-3">{listaAberta ? '▲' : '▼'}</span>
+              <span className="text-muted-foreground text-xs">{listaAberta ? '▲' : '▼'}</span>
             </button>
-
             {listaAberta && (
-              <div className="p-4 space-y-4">
-                {lista.confirmados.length > 0 && (
-                  <PresencaGrupo titulo="Confirmados" cor="green" jogadores={lista.confirmados} voterId={voterId} />
-                )}
-                {lista.suplentes.length > 0 && (
-                  <PresencaGrupo titulo="Suplentes" cor="yellow" jogadores={lista.suplentes} voterId={voterId} />
-                )}
-                {lista.ausentes.length > 0 && (
-                  <PresencaGrupo titulo="Ausentes" cor="red" jogadores={lista.ausentes} voterId={voterId} />
-                )}
-                {lista.pendentes.length > 0 && (
-                  <PresencaGrupo titulo="Sem resposta" cor="gray" jogadores={lista.pendentes} voterId={voterId} />
-                )}
-              </div>
+              <CardContent className="border-t border-border pt-4 space-y-4">
+                {lista.confirmados.length > 0 && <PresencaGrupo titulo="Confirmados" cor="green" jogadores={lista.confirmados} voterId={voterId} />}
+                {lista.suplentes.length > 0 && <PresencaGrupo titulo="Suplentes" cor="yellow" jogadores={lista.suplentes} voterId={voterId} />}
+                {lista.ausentes.length > 0 && <PresencaGrupo titulo="Ausentes" cor="red" jogadores={lista.ausentes} voterId={voterId} />}
+                {lista.pendentes.length > 0 && <PresencaGrupo titulo="Sem resposta" cor="gray" jogadores={lista.pendentes} voterId={voterId} />}
+              </CardContent>
             )}
-          </div>
+          </Card>
         )}
 
         {/* Ações rápidas */}
         <div className="grid grid-cols-2 gap-3">
-          <Link
-            href="/votar"
-            className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col items-center gap-1 hover:border-blue-400 hover:bg-blue-50 transition-colors"
-          >
-            <span className="text-2xl">🗳️</span>
-            <span className="text-sm font-semibold text-gray-900">Avaliar jogadores</span>
-            <span className="text-xs text-gray-400">
-              {voteCount > 0 ? `${voteCount} voto${voteCount !== 1 ? 's' : ''} lançado${voteCount !== 1 ? 's' : ''}` : 'Nenhum voto ainda'}
-            </span>
+          <Link href="/votar" className="block">
+            <Card className="hover:border-primary/40 transition-colors h-full">
+              <CardContent className="pt-4 pb-4 flex flex-col items-center gap-1">
+                <span className="text-2xl">🗳️</span>
+                <span className="text-sm font-semibold">Avaliar jogadores</span>
+                <span className="text-xs text-muted-foreground">
+                  {voteCount > 0 ? `${voteCount} voto${voteCount !== 1 ? 's' : ''} lançado${voteCount !== 1 ? 's' : ''}` : 'Nenhum voto ainda'}
+                </span>
+              </CardContent>
+            </Card>
           </Link>
-          <Link
-            href="/ranking"
-            className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col items-center gap-1 hover:border-blue-400 hover:bg-blue-50 transition-colors"
-          >
-            <span className="text-2xl">📊</span>
-            <span className="text-sm font-semibold text-gray-900">Ranking</span>
-            <span className="text-xs text-gray-400">Ver classificação</span>
+          <Link href="/ranking" className="block">
+            <Card className="hover:border-primary/40 transition-colors h-full">
+              <CardContent className="pt-4 pb-4 flex flex-col items-center gap-1">
+                <span className="text-2xl">📊</span>
+                <span className="text-sm font-semibold">Ranking</span>
+                <span className="text-xs text-muted-foreground">Ver classificação</span>
+              </CardContent>
+            </Card>
           </Link>
         </div>
 
-        {/* Histórico de rodadas */}
+        {/* Histórico */}
         {pastEntries.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 text-sm">Histórico de rodadas</h2>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {pastEntries.map(entry => {
-                const att = entry.attendance ? ATTENDANCE_LABEL[entry.attendance] : null
-                return (
-                  <div key={entry.round_id} className="px-4 py-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{formatDate(entry.scheduled_date)}</p>
-                      <p className="text-xs text-gray-400">{STATUS_LABEL[entry.status ?? ''] ?? entry.status}</p>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Histórico de rodadas</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {pastEntries.map(entry => {
+                  const att = entry.attendance ? ATTENDANCE_LABEL[entry.attendance] : null
+                  return (
+                    <div key={entry.round_id} className="px-4 py-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">{formatDate(entry.scheduled_date)}</p>
+                        <p className="text-xs text-muted-foreground">{STATUS_LABEL[entry.status ?? ''] ?? entry.status}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        {att && <Badge variant="outline" className={`text-xs ${att.cls}`}>{att.label}</Badge>}
+                        {entry.pote && <Badge className={`text-xs ${POTE_BADGE_CLS[entry.pote]}`}>P{entry.pote}</Badge>}
+                        {entry.team && <Badge variant="outline" className="text-xs">T{entry.team}</Badge>}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                      {att && (
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${att.className}`}>
-                          {att.label}
-                        </span>
-                      )}
-                      {entry.pote ? (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${POTE_BADGE[entry.pote]}`}>
-                          Pote {entry.pote}
-                        </span>
-                      ) : null}
-                      {entry.team ? (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${TEAM_COLOR[entry.team]}`}>
-                          Time {entry.team}
-                        </span>
-                      ) : null}
-                      {entry.attendance === 'confirmed' && !entry.pote && !entry.team && (
-                        <span className="text-xs text-gray-300">Aguardando sorteio</span>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
   )
 }
 
-function PresencaGrupo({
-  titulo,
-  cor,
-  jogadores,
-  voterId,
-}: {
-  titulo: string
-  cor: 'green' | 'yellow' | 'red' | 'gray'
-  jogadores: PlayerItem[]
-  voterId: number | null
+function PresencaGrupo({ titulo, cor, jogadores, voterId }: {
+  titulo: string; cor: 'green' | 'yellow' | 'red' | 'gray'; jogadores: PlayerItem[]; voterId: number | null
 }) {
   const colorMap = {
-    green: { dot: 'bg-green-500', label: 'text-green-700', badge: 'bg-green-50 text-green-700' },
+    green:  { dot: 'bg-green-500',  label: 'text-green-700',  badge: 'bg-green-50 text-green-700' },
     yellow: { dot: 'bg-yellow-400', label: 'text-yellow-700', badge: 'bg-yellow-50 text-yellow-700' },
-    red: { dot: 'bg-red-400', label: 'text-red-600', badge: 'bg-red-50 text-red-600' },
-    gray: { dot: 'bg-gray-300', label: 'text-gray-500', badge: 'bg-gray-50 text-gray-500' },
+    red:    { dot: 'bg-red-400',    label: 'text-red-600',    badge: 'bg-red-50 text-red-600' },
+    gray:   { dot: 'bg-muted-foreground/40', label: 'text-muted-foreground', badge: 'bg-muted text-muted-foreground' },
   }
   const c = colorMap[cor]
-
   return (
     <div>
       <p className={`text-xs font-semibold ${c.label} mb-2 flex items-center gap-1.5`}>
@@ -625,10 +506,8 @@ function PresencaGrupo({
       </p>
       <div className="flex flex-wrap gap-1.5">
         {jogadores.map(j => (
-          <span
-            key={j.id}
-            className={`text-xs px-2.5 py-1 rounded-full font-medium ${c.badge} ${j.id === voterId ? 'ring-2 ring-offset-1 ring-current' : ''}`}
-          >
+          <span key={j.id}
+            className={`text-xs px-2.5 py-1 rounded-full font-medium ${c.badge} ${j.id === voterId ? 'ring-2 ring-offset-1 ring-current' : ''}`}>
             {j.name}
           </span>
         ))}

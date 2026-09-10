@@ -39,6 +39,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  // Remove status de novato para todos os participantes confirmados
+  const participantIds = participants.map(p => p.player_id)
+  await supabase.from('players').update({ is_novice: false }).in('id', participantIds).eq('is_novice', true)
+
   return NextResponse.json(
     { success: true, synced: participants.length },
     { headers: { 'Cache-Control': 'no-store' } }

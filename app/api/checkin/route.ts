@@ -84,6 +84,9 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  // Remove status de novato quando o jogador confirma presença
+  await supabase.from('players').update({ is_novice: false }).eq('id', player_id).eq('is_novice', true)
+
   return NextResponse.json(
     { success: true, confirmado: true, suplente: isSuplente },
     { headers: { 'Cache-Control': 'no-store' } }

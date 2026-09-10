@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { toast } from 'sonner'
 
 interface Player {
   id: number
@@ -22,32 +27,30 @@ export default function AdminJogadoresPage() {
   const [adding, setAdding] = useState(false)
   const [editId, setEditId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
-  const [message, setMessage] = useState('')
 
   async function fetchPlayers(pwd: string) {
-    const res = await fetch('/api/admin/players', {
-      headers: { 'x-admin-password': pwd },
-    })
+    const res = await fetch('/api/admin/players', { headers: { 'x-admin-password': pwd } })
     if (res.ok) setPlayers(await res.json())
     return res.ok
   }
 
-  async function handleToggleNovice(player: Player) {
+  async function patch(player: Player, data: Partial<Player>) {
     await fetch(`/api/admin/players/${player.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ is_novice: !player.is_novice }),
+      body: JSON.stringify(data),
     })
     await fetchPlayers(password)
   }
 
-  async function handleToggleGoalkeeper(player: Player) {
-    await fetch(`/api/admin/players/${player.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ is_goalkeeper: !player.is_goalkeeper }),
+  async function handleResetPin(player: Player) {
+    if (!confirm(`Resetar o PIN de ${player.name}? Ele precisará criar um novo PIN no próximo login.`)) return
+    const res = await fetch(`/api/admin/players/${player.id}/reset-pin`, {
+      method: 'POST',
+      headers: { 'x-admin-password': password },
     })
-    await fetchPlayers(password)
+    if (res.ok) toast.success(`PIN de ${player.name} resetado.`)
+    else toast.error('Erro ao resetar PIN')
   }
 
   useEffect(() => {
@@ -65,12 +68,8 @@ export default function AdminJogadoresPage() {
     setLoading(true)
     setAuthError('')
     const ok = await fetchPlayers(password)
-    if (!ok) {
-      setAuthError('Senha incorreta')
-    } else {
-      sessionStorage.setItem('baba_admin_pwd', password)
-      setAuthenticated(true)
-    }
+    if (!ok) { setAuthError('Senha incorreta') }
+    else { sessionStorage.setItem('baba_admin_pwd', password); setAuthenticated(true) }
     setLoading(false)
   }
 
@@ -83,21 +82,8 @@ export default function AdminJogadoresPage() {
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
       body: JSON.stringify({ name: newName.trim() }),
     })
-    if (res.ok) {
-      setNewName('')
-      await fetchPlayers(password)
-      showMessage('Jogador adicionado!')
-    }
+    if (res.ok) { setNewName(''); await fetchPlayers(password); toast.success('Jogador adicionado!') }
     setAdding(false)
-  }
-
-  async function handleToggleActive(player: Player) {
-    await fetch(`/api/admin/players/${player.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ active: !player.active }),
-    })
-    await fetchPlayers(password)
   }
 
   async function handleRename(id: number) {
@@ -107,55 +93,36 @@ export default function AdminJogadoresPage() {
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
       body: JSON.stringify({ name: editName.trim() }),
     })
-    setEditId(null)
-    setEditName('')
+    setEditId(null); setEditName('')
     await fetchPlayers(password)
-    showMessage('Nome atualizado!')
-  }
-
-  function showMessage(msg: string) {
-    setMessage(msg)
-    setTimeout(() => setMessage(''), 3000)
+    toast.success('Nome atualizado!')
   }
 
   if (checking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-400 text-sm">Verificando sessão...</div>
-      </div>
-    )
+    return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground text-sm">Verificando...</p></div>
   }
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-6">
-            <div className="text-4xl mb-2">🔐</div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin — Jogadores</h1>
-          </div>
-          <form onSubmit={handleLogin} className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Senha admin"
-              className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              required
-            />
-            {authError && <p className="text-red-600 text-sm">{authError}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
-            >
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
-          <p className="text-center mt-4">
-            <Link href="/admin" className="text-sm text-gray-400 hover:text-gray-600">← Admin</Link>
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader className="text-center pb-2">
+            <div className="text-4xl mb-1">🔐</div>
+            <CardTitle>Admin — Jogadores</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="Senha admin"
+                className="w-full h-10 px-3 border border-input rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" required />
+              {authError && <p className="text-destructive text-sm">{authError}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</Button>
+            </form>
+            <p className="text-center mt-4">
+              <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">← Admin</Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -164,133 +131,115 @@ export default function AdminJogadoresPage() {
   const inactive = players.filter(p => !p.active)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen">
+      <div className="bg-card border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900">Jogadores</h1>
-          <Link href="/admin" className="text-sm text-gray-400 hover:text-gray-600">← Admin</Link>
+          <h1 className="text-lg font-bold">Jogadores</h1>
+          <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">← Admin</Link>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-        {message && (
-          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 text-sm text-center">
-            {message}
-          </div>
-        )}
-
         {/* Adicionar jogador */}
-        <form onSubmit={handleAdd} className="bg-white rounded-2xl border border-gray-200 p-4 flex gap-2">
+        <form onSubmit={handleAdd} className="flex gap-2">
           <input
             type="text"
             value={newName}
             onChange={e => setNewName(e.target.value)}
             placeholder="Nome do novo jogador"
-            className="flex-1 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="flex-1 h-10 px-3 border border-input rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <button
-            type="submit"
-            disabled={adding || !newName.trim()}
-            className="px-4 h-10 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
-          >
+          <Button type="submit" disabled={adding || !newName.trim()}>
             {adding ? '...' : 'Adicionar'}
-          </button>
+          </Button>
         </form>
 
         {/* Ativos */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900 text-sm">Ativos ({active.length})</h2>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {active.map(player => (
-              <div key={player.id} className="px-4 py-3 flex items-center gap-3">
-                {editId === player.id ? (
-                  <>
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      className="flex-1 h-8 px-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => handleRename(player.id)}
-                      className="text-xs text-blue-600 hover:underline font-medium"
-                    >
-                      Salvar
-                    </button>
-                    <button
-                      onClick={() => setEditId(null)}
-                      className="text-xs text-gray-400 hover:underline"
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex-1 text-sm text-gray-900">{player.name}</span>
-                    {player.is_goalkeeper && (
-                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 border border-blue-200">
-                        Goleiro
-                      </span>
-                    )}
-                    {player.is_novice && (
-                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 border border-orange-200">
-                        Novato
-                      </span>
-                    )}
-                    <button
-                      onClick={() => handleToggleGoalkeeper(player)}
-                      className="text-xs text-blue-400 hover:text-blue-600"
-                    >
-                      {player.is_goalkeeper ? 'Remover goleiro' : 'Marcar goleiro'}
-                    </button>
-                    <button
-                      onClick={() => handleToggleNovice(player)}
-                      className="text-xs text-orange-400 hover:text-orange-600"
-                    >
-                      {player.is_novice ? 'Remover novato' : 'Marcar novato'}
-                    </button>
-                    <button
-                      onClick={() => { setEditId(player.id); setEditName(player.name) }}
-                      className="text-xs text-gray-400 hover:text-gray-600"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleToggleActive(player)}
-                      className="text-xs text-red-400 hover:text-red-600"
-                    >
-                      Inativar
-                    </button>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Inativos */}
-        {inactive.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-500 text-sm">Inativos ({inactive.length})</h2>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {inactive.map(player => (
-                <div key={player.id} className="px-4 py-3 flex items-center gap-3 opacity-60">
-                  <span className="flex-1 text-sm text-gray-600 line-through">{player.name}</span>
-                  <button
-                    onClick={() => handleToggleActive(player)}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    Reativar
-                  </button>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Ativos ({active.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-border">
+              {active.map(player => (
+                <div key={player.id} className="px-4 py-3">
+                  {editId === player.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        className="flex-1 h-8 px-2 border border-input rounded text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                        autoFocus
+                      />
+                      <Button size="sm" onClick={() => handleRename(player.id)}>Salvar</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditId(null)}>Cancelar</Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium">{player.name}</span>
+                          {player.is_goalkeeper && <Badge variant="outline" className="text-xs border-blue-300 text-blue-600">Goleiro</Badge>}
+                          {player.is_novice && <Badge variant="outline" className="text-xs border-orange-300 text-orange-600">Novato</Badge>}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          <button onClick={() => patch(player, { is_goalkeeper: !player.is_goalkeeper })}
+                            className="text-xs text-muted-foreground hover:text-primary">
+                            {player.is_goalkeeper ? 'Remover goleiro' : 'Marcar goleiro'}
+                          </button>
+                          <span className="text-xs text-muted-foreground">·</span>
+                          <button onClick={() => patch(player, { is_novice: !player.is_novice })}
+                            className="text-xs text-muted-foreground hover:text-orange-500">
+                            {player.is_novice ? 'Remover novato' : 'Marcar novato'}
+                          </button>
+                          <span className="text-xs text-muted-foreground">·</span>
+                          <button onClick={() => { setEditId(player.id); setEditName(player.name) }}
+                            className="text-xs text-muted-foreground hover:text-foreground">
+                            Editar nome
+                          </button>
+                          <span className="text-xs text-muted-foreground">·</span>
+                          <button onClick={() => handleResetPin(player)}
+                            className="text-xs text-muted-foreground hover:text-yellow-600">
+                            Resetar PIN
+                          </button>
+                          <span className="text-xs text-muted-foreground">·</span>
+                          <button onClick={() => patch(player, { active: false })}
+                            className="text-xs text-destructive hover:opacity-80">
+                            Inativar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
+          </CardContent>
+        </Card>
+
+        {inactive.length > 0 && (
+          <>
+            <Separator />
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Inativos ({inactive.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {inactive.map(player => (
+                    <div key={player.id} className="px-4 py-3 flex items-center gap-3 opacity-60">
+                      <span className="flex-1 text-sm line-through">{player.name}</span>
+                      <button onClick={() => patch(player, { active: true })}
+                        className="text-xs text-primary hover:underline">
+                        Reativar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </div>
