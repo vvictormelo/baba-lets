@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { formatDate, formatDateLong } from '@/lib/format'
 
@@ -150,14 +151,20 @@ export default function PainelPage() {
   const roundClosed = activeRound?.status === 'drawn' || activeRound?.status === 'closed'
   const vagas = activeRound ? 18 - activeRound.confirmados : 0
 
+  const roundCardLabel = activeRound?.status === 'closed'
+    ? 'Última rodada'
+    : activeRound?.status === 'drawn'
+    ? 'Rodada atual'
+    : 'Próxima rodada'
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">⚽ Baba Lets</h1>
-            <p className="text-sm text-gray-500">{voterName}</p>
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Image src="/logo.png" alt="Let's Baba" width={120} height={40} className="h-9 w-auto" priority />
+            <p className="text-sm text-gray-500 border-l border-gray-200 pl-3">{voterName}</p>
           </div>
           <button
             onClick={() => { sessionStorage.clear(); router.replace('/') }}
@@ -180,7 +187,7 @@ export default function PainelPage() {
           </div>
         )}
 
-        {/* Card da rodada ativa */}
+        {/* Card da rodada */}
         {activeRound ? (
           <div className={`rounded-2xl border-2 p-5 transition-colors ${
             isConfirmed ? 'border-blue-500 bg-blue-50'
@@ -190,13 +197,15 @@ export default function PainelPage() {
           }`}>
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Próxima rodada</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{roundCardLabel}</p>
                 <p className="font-bold text-gray-900 text-lg leading-tight">
                   {formatDateLong(activeRound.scheduled_date)}
                 </p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    activeRound.status === 'drawn' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+                    activeRound.status === 'drawn' ? 'bg-blue-100 text-blue-700'
+                    : activeRound.status === 'closed' ? 'bg-gray-100 text-gray-500'
+                    : 'bg-yellow-100 text-yellow-700'
                   }`}>
                     {STATUS_LABEL[activeRound.status] ?? activeRound.status}
                   </span>
@@ -237,6 +246,7 @@ export default function PainelPage() {
               </div>
             </div>
 
+            {/* Pote e time do jogador */}
             {isConfirmed && (activeEntry?.pote || activeEntry?.team) && (
               <div className="flex items-center gap-2 mb-4">
                 {activeEntry.pote && (
@@ -258,6 +268,7 @@ export default function PainelPage() {
               </p>
             )}
 
+            {/* Botões de ação */}
             {!roundClosed && (
               isConfirmed || isSuplente ? (
                 <button
@@ -286,6 +297,36 @@ export default function PainelPage() {
                 Ver resultado →
               </Link>
             )}
+
+            {/* Potes da rodada — dentro do card, visível a todos */}
+            {activeRound.potes.length > 0 && (
+              <div className="mt-5 pt-4 border-t border-gray-200/60">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Potes da rodada</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[1, 2, 3, 4, 5, 6].map(pote => {
+                    const jogadores = activeRound.potes.filter(p => p.pote === pote)
+                    if (jogadores.length === 0) return null
+                    return (
+                      <div key={pote} className="rounded-xl bg-white/70 border border-gray-200 p-2.5">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full inline-block mb-1.5 ${POTE_BADGE[pote]}`}>
+                          Pote {pote}
+                        </span>
+                        <div className="space-y-0.5">
+                          {jogadores.map(j => (
+                            <p
+                              key={j.player_id}
+                              className={`text-xs truncate ${j.player_id === voterId ? 'font-bold text-blue-700' : 'text-gray-700'}`}
+                            >
+                              {j.player_id === voterId ? '▶ ' : ''}{j.name}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-200 p-5 text-center">
@@ -305,7 +346,9 @@ export default function PainelPage() {
               <div>
                 <h2 className="font-semibold text-gray-900 text-sm">Lista de presença</h2>
                 <p className="text-xs text-gray-400">
-                  {lista.confirmados.length} confirmados · {lista.suplentes.length > 0 ? `${lista.suplentes.length} suplentes · ` : ''}{lista.ausentes.length} ausentes · {lista.pendentes.length} sem resposta
+                  {lista.confirmados.length} confirmados
+                  {lista.suplentes.length > 0 ? ` · ${lista.suplentes.length} suplentes` : ''}
+                  {` · ${lista.ausentes.length} ausentes · ${lista.pendentes.length} sem resposta`}
                 </p>
               </div>
               <span className="text-gray-400 text-xs ml-3">{listaAberta ? '▲' : '▼'}</span>
@@ -327,39 +370,6 @@ export default function PainelPage() {
                 )}
               </div>
             )}
-          </div>
-        )}
-
-        {/* Potes da rodada ativa */}
-        {activeRound && activeRound.potes.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 text-sm">Potes da rodada</h2>
-              <p className="text-xs text-gray-400">Distribuição definida pelo organizador</p>
-            </div>
-            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {[1, 2, 3, 4, 5, 6].map(pote => {
-                const jogadores = activeRound.potes.filter(p => p.pote === pote)
-                if (jogadores.length === 0) return null
-                return (
-                  <div key={pote} className="rounded-xl border border-gray-200 p-3">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full inline-block mb-2 ${POTE_BADGE[pote]}`}>
-                      Pote {pote}
-                    </span>
-                    <div className="space-y-1">
-                      {jogadores.map(j => (
-                        <p
-                          key={j.player_id}
-                          className={`text-xs truncate ${j.player_id === voterId ? 'font-bold text-blue-700' : 'text-gray-700'}`}
-                        >
-                          {j.player_id === voterId ? '▶ ' : ''}{j.name}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
           </div>
         )}
 

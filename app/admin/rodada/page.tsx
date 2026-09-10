@@ -41,17 +41,17 @@ interface ActiveRoundData {
 }
 
 const POTE_BADGE: Record<number, string> = {
-  1: 'bg-green-600 text-white',
-  2: 'bg-green-500 text-white',
-  3: 'bg-green-400 text-white',
+  1: 'bg-blue-900 text-white',
+  2: 'bg-blue-700 text-white',
+  3: 'bg-blue-500 text-white',
   4: 'bg-gray-500 text-white',
   5: 'bg-gray-400 text-white',
   6: 'bg-gray-300 text-gray-700',
 }
 
 const TEAM_HEADER = [
-  'bg-green-500 text-white',
-  'bg-blue-500 text-white',
+  'bg-blue-700 text-white',
+  'bg-sky-500 text-white',
   'bg-orange-500 text-white',
 ]
 
@@ -276,14 +276,14 @@ export default function AdminRodadaPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Senha admin"
-              className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
               required
             />
             {authError && <p className="text-red-600 text-sm">{authError}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
+              className="w-full h-11 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -336,7 +336,7 @@ export default function AdminRodadaPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
         {message && (
-          <div className="bg-green-50 border border-green-300 text-green-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
+          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
             {message}
           </div>
         )}
@@ -354,13 +354,13 @@ export default function AdminRodadaPage() {
               <DateInput
                 value={newDate}
                 onChange={setNewDate}
-                className="flex-1 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
               <button
                 type="submit"
                 disabled={creating}
-                className="px-4 h-10 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="px-4 h-10 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 {creating ? '...' : 'Criar'}
               </button>
@@ -376,11 +376,11 @@ export default function AdminRodadaPage() {
                 <p className="font-semibold text-gray-900">
                   {formatDateLong(roundData.round.scheduled_date)}
                 </p>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${drawn ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${drawn ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
                   {drawn ? 'Sorteado' : 'Em preparação'}
                 </span>
               </div>
-              <span className={`text-2xl font-bold ${confirmedCount === 18 ? 'text-green-600' : 'text-gray-400'}`}>
+              <span className={`text-2xl font-bold ${confirmedCount === 18 ? 'text-blue-700' : 'text-gray-400'}`}>
                 {confirmedCount}/18
               </span>
             </div>
@@ -395,7 +395,7 @@ export default function AdminRodadaPage() {
                   </div>
                   <button
                     onClick={() => setShowNovatoForm(v => !v)}
-                    className="text-sm text-green-600 hover:text-green-700 font-medium"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                   >
                     {showNovatoForm ? 'Fechar' : '+ Adicionar'}
                   </button>
@@ -407,13 +407,13 @@ export default function AdminRodadaPage() {
                       value={novatoNome}
                       onChange={e => setNovatoNome(e.target.value)}
                       placeholder="Nome do novato"
-                      className="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                       required
                     />
                     <select
                       value={novatoPote}
                       onChange={e => setNovatoPote(Number(e.target.value))}
-                      className="h-10 px-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="h-10 px-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                     >
                       {[1,2,3,4,5,6].map(p => (
                         <option key={p} value={p}>Pote {p}</option>
@@ -422,7 +422,7 @@ export default function AdminRodadaPage() {
                     <button
                       type="submit"
                       disabled={adicionandoNovato || !novatoNome.trim()}
-                      className="h-10 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
+                      className="h-10 px-4 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
                     >
                       {adicionandoNovato ? '...' : 'Cadastrar'}
                     </button>
@@ -446,13 +446,13 @@ export default function AdminRodadaPage() {
                     const manualPote = participant?.manual_pote ?? null
 
                     return (
-                      <div key={player.id} className={`px-4 py-2.5 flex items-center gap-3 ${isConfirmed ? 'bg-green-50' : ''}`}>
+                      <div key={player.id} className={`px-4 py-2.5 flex items-center gap-3 ${isConfirmed ? 'bg-blue-50' : ''}`}>
                         <input
                           type="checkbox"
                           checked={isConfirmed}
                           onChange={e => handleToggleParticipant(player.id, e.target.checked)}
                           disabled={!isConfirmed && confirmedCount >= 18}
-                          className="h-4 w-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-600"
                         />
                         <div className="flex-1 min-w-0">
                           <span className="text-sm font-medium text-gray-900">{player.name}</span>
@@ -501,7 +501,7 @@ export default function AdminRodadaPage() {
                 <button
                   onClick={handleBuildPots}
                   disabled={!canBuildPots || buildingPots}
-                  className="flex-1 h-12 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors text-sm"
+                  className="flex-1 h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors text-sm"
                 >
                   {buildingPots ? 'Montando...' : potsBuilt ? 'Remontar potes' : 'Montar potes'}
                 </button>
@@ -628,7 +628,7 @@ export default function AdminRodadaPage() {
 
             {drawn && (
               <div className="text-center">
-                <Link href="/resultado" className="text-sm text-green-600 hover:underline">
+                <Link href="/resultado" className="text-sm text-blue-600 hover:underline">
                   Ver resultado público →
                 </Link>
               </div>

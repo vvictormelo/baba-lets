@@ -113,7 +113,7 @@ export default function AdminPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
             </div>
@@ -123,7 +123,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
+              className="w-full h-11 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -147,16 +147,16 @@ export default function AdminPage() {
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-900">Admin — Baba Lets</h1>
           <div className="flex gap-3">
-            <Link href="/admin/jogadores" className="text-sm text-green-600 hover:underline">Jogadores</Link>
-            <Link href="/admin/rodada" className="text-sm text-green-600 hover:underline">Rodada</Link>
-            <Link href="/admin/presenca" className="text-sm text-green-600 hover:underline">Presença</Link>
+            <Link href="/admin/jogadores" className="text-sm text-blue-600 hover:underline">Jogadores</Link>
+            <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline">Rodada</Link>
+            <Link href="/admin/presenca" className="text-sm text-blue-600 hover:underline">Presença</Link>
           </div>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {message && (
-          <div className="bg-green-50 border border-green-300 text-green-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
+          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 text-sm text-center font-medium">
             {message}
           </div>
         )}
@@ -165,25 +165,37 @@ export default function AdminPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
           <h2 className="font-semibold text-gray-900 mb-3">Rodada ativa</h2>
           {status.active_round ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-700 font-medium">{dateStr}</p>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                  status.active_round.status === 'drawn' ? 'bg-green-100 text-green-700' :
-                  'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {status.active_round.status === 'drawn' ? 'Sorteado' :
-                   status.active_round.status === 'draft' ? 'Em preparação' : status.active_round.status}
-                </span>
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-700 font-medium">{dateStr}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    status.active_round.status === 'closed' ? 'bg-gray-100 text-gray-500' :
+                    status.active_round.status === 'drawn' ? 'bg-blue-100 text-blue-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {status.active_round.status === 'closed' ? 'Encerrada' :
+                     status.active_round.status === 'drawn' ? 'Sorteada' :
+                     status.active_round.status === 'draft' ? 'Em preparação' : status.active_round.status}
+                  </span>
+                </div>
+                <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline font-medium">
+                  Gerenciar →
+                </Link>
               </div>
-              <Link href="/admin/rodada" className="text-sm text-green-600 hover:underline font-medium">
-                Gerenciar →
-              </Link>
-            </div>
+              {status.active_round.status === 'closed' && (
+                <Link
+                  href="/admin/rodada"
+                  className="mt-4 flex w-full items-center justify-center h-11 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-xl transition-colors text-sm"
+                >
+                  + Criar nova rodada
+                </Link>
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-between">
               <p className="text-gray-400 text-sm">Nenhuma rodada ativa.</p>
-              <Link href="/admin/rodada" className="text-sm text-green-600 hover:underline">Criar rodada →</Link>
+              <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline">Criar rodada →</Link>
             </div>
           )}
         </div>
@@ -192,15 +204,15 @@ export default function AdminPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-gray-900">Progresso da votação</h2>
-            <span className="text-2xl font-bold text-green-600">{progress}%</span>
+            <span className="text-2xl font-bold text-blue-700">{progress}%</span>
           </div>
           <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
-            <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${progress}%` }} />
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="bg-green-50 rounded-xl p-3 border border-green-200">
-              <div className="text-2xl font-bold text-green-700">{status.voted}</div>
-              <div className="text-green-600 text-xs">Já avaliaram</div>
+            <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
+              <div className="text-2xl font-bold text-blue-700">{status.voted}</div>
+              <div className="text-blue-600 text-xs">Já avaliaram</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
               <div className="text-2xl font-bold text-gray-700">{status.total - status.voted}</div>
@@ -252,7 +264,7 @@ export default function AdminPage() {
               className={`flex-1 h-11 font-semibold rounded-xl transition-colors text-sm ${
                 status.results_revealed
                   ? 'bg-gray-600 hover:bg-gray-700 text-white'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-blue-700 hover:bg-blue-800 text-white'
               } disabled:opacity-50`}
             >
               {toggling ? '...' : status.results_revealed ? 'Ocultar resultado' : 'Revelar resultado'}

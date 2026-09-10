@@ -17,9 +17,9 @@ interface VoteEntry {
 }
 
 const POTE_COLORS: Record<number, { badge: string; bg: string; border: string }> = {
-  1: { badge: 'bg-green-600 text-white', bg: 'bg-green-50', border: 'border-green-200' },
-  2: { badge: 'bg-green-500 text-white', bg: 'bg-green-50', border: 'border-green-200' },
-  3: { badge: 'bg-green-400 text-white', bg: 'bg-green-50', border: 'border-green-200' },
+  1: { badge: 'bg-blue-900 text-white', bg: 'bg-blue-50', border: 'border-blue-200' },
+  2: { badge: 'bg-blue-700 text-white', bg: 'bg-blue-50', border: 'border-blue-200' },
+  3: { badge: 'bg-blue-500 text-white', bg: 'bg-blue-50', border: 'border-blue-200' },
   4: { badge: 'bg-gray-500 text-white', bg: 'bg-gray-50', border: 'border-gray-200' },
   5: { badge: 'bg-gray-400 text-white', bg: 'bg-gray-50', border: 'border-gray-200' },
   6: { badge: 'bg-gray-300 text-gray-700', bg: 'bg-gray-50', border: 'border-gray-200' },
@@ -77,7 +77,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 gap-4">
         <p className="text-gray-500">Você ainda não avaliou nenhum jogador.</p>
-        <Link href="/votar" className="text-green-600 hover:underline text-sm">← Ir para votação</Link>
+        <Link href="/votar" className="text-blue-600 hover:underline text-sm">← Ir para votação</Link>
       </div>
     )
   }
@@ -91,7 +91,7 @@ export default function CheckoutPage() {
             <h1 className="text-lg font-bold text-gray-900">Resumo dos votos</h1>
             <p className="text-sm text-gray-500">{voterName}</p>
           </div>
-          <Link href="/votar" className="text-sm text-green-600 hover:underline">
+          <Link href="/votar" className="text-sm text-blue-600 hover:underline">
             ← Editar
           </Link>
         </div>
@@ -114,12 +114,12 @@ export default function CheckoutPage() {
                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f3f4f6" strokeWidth="3" />
                 <circle
                   cx="18" cy="18" r="15.9" fill="none"
-                  stroke="#16a34a" strokeWidth="3"
+                  stroke="#1d4ed8" strokeWidth="3"
                   strokeDasharray={`${(totalAvaliados / totalJogadores) * 100} 100`}
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-green-700">
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-blue-700">
                 {Math.round((totalAvaliados / totalJogadores) * 100)}%
               </span>
             </div>
@@ -177,7 +177,7 @@ export default function CheckoutPage() {
         <div className="space-y-2 pb-6">
           <Link
             href="/painel"
-            className="block w-full h-12 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors text-center leading-[3rem]"
+            className="block w-full h-12 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl transition-colors text-center leading-[3rem]"
           >
             Concluído →
           </Link>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface Player {
   id: number
@@ -53,8 +54,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-3">⚽</div>
-          <h1 className="text-3xl font-bold text-gray-900">Baba Lets</h1>
+          <div className="flex justify-center mb-2">
+            <Image src="/logo.png" alt="Let's Baba!" width={160} height={160} priority />
+          </div>
           <p className="text-gray-500 mt-1">Avalie os jogadores e monte os times!</p>
         </div>
 
@@ -70,7 +72,7 @@ export default function LoginPage() {
                 <select
                   value={selectedId}
                   onChange={e => setSelectedId(e.target.value)}
-                  className="w-full h-11 px-3 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full h-11 px-3 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                   required
                 >
                   <option value="">Selecione seu nome...</option>
@@ -90,7 +92,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !selectedId}
-              className="w-full h-12 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+              className="w-full h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -98,9 +100,9 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-center gap-4 mt-6">
-          <a href="/ranking" className="text-xs text-green-600 hover:underline">Ver ranking</a>
+          <a href="/ranking" className="text-xs text-blue-600 hover:underline">Ver ranking</a>
           <span className="text-xs text-gray-300">|</span>
-          <a href="/resultado" className="text-xs text-green-600 hover:underline">Ver resultado</a>
+          <a href="/resultado" className="text-xs text-blue-600 hover:underline">Ver resultado</a>
           <span className="text-xs text-gray-300">|</span>
           <a href="/admin" className="text-xs text-gray-400 hover:text-gray-600">Admin</a>
         </div>
