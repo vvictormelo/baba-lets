@@ -72,6 +72,7 @@ export default function AdminRodadaPage() {
   const [drawing, setDrawing] = useState(false)
   const [closing, setClosing] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [syncingAttendance, setSyncingAttendance] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -278,6 +279,24 @@ export default function AdminRodadaPage() {
     setResultsRevealed(r => !r)
     showMessage(!resultsRevealed ? 'Resultado revelado!' : 'Resultado ocultado.')
     setToggling(false)
+  }
+
+  async function handleSyncAttendance() {
+    if (!roundData) return
+    if (!confirm('Aplicar presença de todos os jogadores nos potes desta rodada? Isso marcará todos como "confirmados" no histórico de presença.')) return
+    setSyncingAttendance(true)
+    setError('')
+    const res = await fetch(`/api/admin/rounds/${roundData.round.id}/sync-attendance`, {
+      method: 'POST',
+      headers: { 'x-admin-password': password },
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.error || 'Erro ao sincronizar presença')
+    } else {
+      showMessage(`Presença aplicada para ${data.synced} jogadores!`)
+    }
+    setSyncingAttendance(false)
   }
 
   async function handleDeleteRound() {
@@ -627,6 +646,23 @@ export default function AdminRodadaPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Aplicar presença dos jogadores nos potes */}
+            {potsBuilt && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Aplicar presença pelos potes</p>
+                  <p className="text-xs text-gray-400">Marca todos os {(roundData.pots?.length ?? 0)} jogadores nos potes como confirmados no histórico de presença.</p>
+                </div>
+                <button
+                  onClick={handleSyncAttendance}
+                  disabled={syncingAttendance}
+                  className="h-9 px-4 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-xl transition-colors flex-shrink-0 disabled:opacity-50"
+                >
+                  {syncingAttendance ? '...' : 'Aplicar'}
+                </button>
               </div>
             )}
 
