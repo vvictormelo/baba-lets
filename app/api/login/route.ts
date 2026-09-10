@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import { hashPin, verifyPin } from '@/lib/pin'
 import { createServerClient } from '@/lib/supabase-server'
 
 export const dynamic = 'force-dynamic'
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Jogador inativo' }, { status: 403 })
   }
 
-  // PIN não foi enviado — informar ao cliente qual passo mostrar
+  // PIN não enviado — informar ao cliente qual passo mostrar
   if (pin === undefined || pin === null || pin === '') {
     if (!player.pin_hash) {
       return NextResponse.json({ needs_pin_setup: true }, { status: 200, headers: HEADERS })
@@ -44,11 +44,11 @@ export async function POST(req: NextRequest) {
 
   // Primeiro acesso — criar PIN
   if (!player.pin_hash) {
-    const hash = await bcrypt.hash(pin, 10)
+    const hash = await hashPin(pin)
     await supabase.from('players').update({ pin_hash: hash }).eq('id', player.id)
   } else {
     // Validar PIN existente
-    const valid = await bcrypt.compare(pin, player.pin_hash)
+    const valid = await verifyPin(pin, player.pin_hash)
     if (!valid) {
       return NextResponse.json({ error: 'PIN incorreto' }, { status: 403, headers: HEADERS })
     }
