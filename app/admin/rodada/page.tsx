@@ -347,7 +347,7 @@ export default function AdminRodadaPage() {
         )}
 
         {/* Criar rodada */}
-        {!roundData?.round && (
+        {(!roundData?.round || roundData?.round?.status === 'closed') && (
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
             <h2 className="font-semibold text-gray-900 mb-3">Nova rodada</h2>
             <form onSubmit={handleCreateRound} className="flex gap-2">
