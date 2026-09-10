@@ -278,14 +278,31 @@ export default function PainelPage() {
                 >
                   {checkingIn ? '...' : 'Cancelar presença'}
                 </button>
-              ) : (
+              ) : isAbsent ? (
                 <button
                   onClick={() => handleCheckin(true)}
                   disabled={checkingIn}
-                  className="w-full h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+                  className="w-full h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-bold rounded-xl transition-colors"
                 >
-                  {checkingIn ? 'Confirmando...' : isAbsent ? 'Mudar para confirmado' : 'Confirmar presença'}
+                  {checkingIn ? 'Confirmando...' : 'Confirmar presença'}
                 </button>
+              ) : (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleCheckin(true)}
+                    disabled={checkingIn}
+                    className="flex-1 h-12 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white font-bold rounded-xl transition-colors text-sm"
+                  >
+                    {checkingIn ? '...' : 'Confirmar presença'}
+                  </button>
+                  <button
+                    onClick={() => handleCheckin(false)}
+                    disabled={checkingIn}
+                    className="flex-1 h-12 border-2 border-red-300 text-red-600 hover:bg-red-50 font-semibold rounded-xl transition-colors text-sm disabled:opacity-50"
+                  >
+                    {checkingIn ? '...' : 'Não vou'}
+                  </button>
+                </div>
               )
             )}
 
