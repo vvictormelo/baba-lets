@@ -48,6 +48,14 @@ interface ListaPresenca {
   pendentes: PlayerItem[]
 }
 
+interface AwardEntry { player_id: number; name: string; votes: number }
+interface AwardsData {
+  round_id: number
+  mvp: AwardEntry[]
+  pereba: AwardEntry[]
+  my_vote: { mvp_id: number; pereba_id: number } | null
+}
+
 const POTE_BADGE: Record<number, string> = {
   1: 'bg-blue-900 text-white',
   2: 'bg-blue-700 text-white',
@@ -88,6 +96,11 @@ export default function PainelPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [listaAberta, setListaAberta] = useState(false)
+  const [awards, setAwards] = useState<AwardsData | null>(null)
+  const [selectedMvp, setSelectedMvp] = useState<string>('')
+  const [selectedPereba, setSelectedPereba] = useState<string>('')
+  const [submittingAward, setSubmittingAward] = useState(false)
+  const [awardMessage, setAwardMessage] = useState('')
 
   const loadData = useCallback(async (id: number) => {
     const [hist, votes, presenca] = await Promise.all([
@@ -98,6 +111,15 @@ export default function PainelPage() {
     setData(hist)
     setVoteCount(Array.isArray(votes) ? votes.length : 0)
     setLista(presenca)
+    const roundId = hist?.active_round?.id
+    if (roundId) {
+      const awardsData = await fetch(`/api/awards?round_id=${roundId}&voter_id=${id}`).then(r => r.json())
+      setAwards(awardsData)
+      if (awardsData?.my_vote) {
+        setSelectedMvp(String(awardsData.my_vote.mvp_id))
+        setSelectedPereba(String(awardsData.my_vote.pereba_id))
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -109,6 +131,32 @@ export default function PainelPage() {
     setVoterName(name)
     loadData(numId).then(() => setLoading(false))
   }, [router, loadData])
+
+  async function handleAwardSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!voterId || !activeRound || !selectedMvp || !selectedPereba) return
+    setSubmittingAward(true)
+    const res = await fetch('/api/awards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        voter_id: voterId,
+        round_id: activeRound.id,
+        mvp_id: Number(selectedMvp),
+        pereba_id: Number(selectedPereba),
+      }),
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      setAwardMessage(result.error || 'Erro ao salvar')
+    } else {
+      setAwardMessage('Voto salvo!')
+      const awardsData = await fetch(`/api/awards?round_id=${activeRound.id}&voter_id=${voterId}`).then(r => r.json())
+      setAwards(awardsData)
+    }
+    setTimeout(() => setAwardMessage(''), 3000)
+    setSubmittingAward(false)
+  }
 
   async function handleCheckin(confirmar: boolean) {
     if (!voterId) return
@@ -350,6 +398,98 @@ export default function PainelPage() {
             <p className="text-3xl mb-2">📅</p>
             <p className="text-gray-500 text-sm">Nenhuma rodada agendada no momento.</p>
             <p className="text-gray-400 text-xs mt-1">O admin vai cadastrar quando tiver data definida.</p>
+          </div>
+        )}
+
+        {/* MVP e Pereba da rodada */}
+        {activeRound && roundClosed && (
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900 text-sm">MVP e Pereba da rodada</h2>
+              <p className="text-xs text-gray-400">Escolha o melhor e o pior da pelada</p>
+            </div>
+
+            {/* Formulário de votação */}
+            {activeRound.potes.length > 0 && (
+              <form onSubmit={handleAwardSubmit} className="p-4 space-y-3 border-b border-gray-100">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-yellow-600 mb-1">🏆 MVP</label>
+                    <select
+                      value={selectedMvp}
+                      onChange={e => setSelectedMvp(e.target.value)}
+                      className="w-full h-10 px-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
+                      required
+                    >
+                      <option value="">Escolher...</option>
+                      {activeRound.potes
+                        .filter(p => p.player_id !== voterId)
+                        .map(p => (
+                          <option key={p.player_id} value={p.player_id}>{p.name}</option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-red-500 mb-1">💩 Pereba</label>
+                    <select
+                      value={selectedPereba}
+                      onChange={e => setSelectedPereba(e.target.value)}
+                      className="w-full h-10 px-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-white"
+                      required
+                    >
+                      <option value="">Escolher...</option>
+                      {activeRound.potes
+                        .filter(p => p.player_id !== voterId && String(p.player_id) !== selectedMvp)
+                        .map(p => (
+                          <option key={p.player_id} value={p.player_id}>{p.name}</option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+                {awardMessage && (
+                  <p className="text-xs text-center font-medium text-blue-700">{awardMessage}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={submittingAward || !selectedMvp || !selectedPereba}
+                  className="w-full h-10 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm transition-colors"
+                >
+                  {submittingAward ? 'Salvando...' : awards?.my_vote ? 'Atualizar voto' : 'Salvar voto'}
+                </button>
+              </form>
+            )}
+
+            {/* Resultado parcial */}
+            {awards && (awards.mvp.length > 0 || awards.pereba.length > 0) && (
+              <div className="grid grid-cols-2 divide-x divide-gray-100">
+                <div className="p-4">
+                  <p className="text-xs font-semibold text-yellow-600 mb-2">🏆 MVP</p>
+                  <div className="space-y-1.5">
+                    {awards.mvp.slice(0, 5).map((a, i) => (
+                      <div key={a.player_id} className="flex items-center justify-between gap-2">
+                        <span className={`text-xs truncate ${i === 0 ? 'font-bold text-gray-900' : 'text-gray-500'}`}>
+                          {i === 0 ? '★ ' : ''}{a.name}
+                        </span>
+                        <span className="text-xs text-gray-400 flex-shrink-0">{a.votes}v</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p className="text-xs font-semibold text-red-500 mb-2">💩 Pereba</p>
+                  <div className="space-y-1.5">
+                    {awards.pereba.slice(0, 5).map((a, i) => (
+                      <div key={a.player_id} className="flex items-center justify-between gap-2">
+                        <span className={`text-xs truncate ${i === 0 ? 'font-bold text-gray-900' : 'text-gray-500'}`}>
+                          {i === 0 ? '👎 ' : ''}{a.name}
+                        </span>
+                        <span className="text-xs text-gray-400 flex-shrink-0">{a.votes}v</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -40,6 +40,9 @@ interface ActiveRoundData {
   teams: TeamEntry[]
 }
 
+interface AwardEntry { player_id: number; name: string; votes: number }
+interface AwardsData { mvp: AwardEntry[]; pereba: AwardEntry[] }
+
 const POTE_BADGE: Record<number, string> = {
   1: 'bg-blue-900 text-white',
   2: 'bg-blue-700 text-white',
@@ -81,15 +84,30 @@ export default function AdminRodadaPage() {
   // Substituição
   const [subOut, setSubOut] = useState<number | null>(null)
 
+  // Revelar resultado
+  const [resultsRevealed, setResultsRevealed] = useState(false)
+  const [toggling, setToggling] = useState(false)
+
+  // MVP / Pereba
+  const [awards, setAwards] = useState<AwardsData | null>(null)
+
   const fetchAll = useCallback(async (pwd: string) => {
-    const [playersRes, roundRes] = await Promise.all([
+    const [playersRes, roundRes, statusRes] = await Promise.all([
       fetch('/api/admin/players', { headers: { 'x-admin-password': pwd } }),
       fetch('/api/admin/rounds', { headers: { 'x-admin-password': pwd } }),
+      fetch('/api/admin/status', { headers: { 'x-admin-password': pwd } }),
     ])
     if (!playersRes.ok) return false
-    const [playersData, roundRaw] = await Promise.all([playersRes.json(), roundRes.json()])
+    const [playersData, roundRaw, statusData] = await Promise.all([
+      playersRes.json(), roundRes.json(), statusRes.json(),
+    ])
     setAllPlayers(playersData)
     setRoundData(roundRaw)
+    setResultsRevealed(!!statusData?.results_revealed)
+    if (roundRaw?.round?.id) {
+      const awardsRes = await fetch(`/api/awards?round_id=${roundRaw.round.id}`)
+      if (awardsRes.ok) setAwards(await awardsRes.json())
+    }
     return true
   }, [])
 
@@ -248,6 +266,18 @@ export default function AdminRodadaPage() {
     await fetchAll(password)
     showMessage(`${player.name} cadastrado como novato no Pote ${novatoPote}!`)
     setAdicionandoNovato(false)
+  }
+
+  async function toggleReveal() {
+    setToggling(true)
+    await fetch('/api/admin/reveal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ reveal: !resultsRevealed }),
+    })
+    setResultsRevealed(r => !r)
+    showMessage(!resultsRevealed ? 'Resultado revelado!' : 'Resultado ocultado.')
+    setToggling(false)
   }
 
   async function handleDeleteRound() {
@@ -690,11 +720,73 @@ export default function AdminRodadaPage() {
               </div>
             )}
 
+            {/* Revelar resultado */}
             {drawn && (
-              <div className="text-center">
-                <Link href="/resultado" className="text-sm text-blue-600 hover:underline">
-                  Ver resultado público →
-                </Link>
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Resultado público</p>
+                  <p className="text-xs text-gray-400">{resultsRevealed ? 'Visível para todos' : 'Oculto'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleReveal}
+                    disabled={toggling}
+                    className={`h-9 px-4 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 ${
+                      resultsRevealed ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-blue-700 text-white hover:bg-blue-800'
+                    }`}
+                  >
+                    {toggling ? '...' : resultsRevealed ? 'Ocultar' : 'Revelar'}
+                  </button>
+                  <Link href="/resultado" className="h-9 px-3 flex items-center border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50">
+                    Ver →
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* MVP e Pereba da rodada */}
+            {drawn && awards && (awards.mvp.length > 0 || awards.pereba.length > 0) && (
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h2 className="font-semibold text-gray-900 text-sm">MVP e Pereba da rodada</h2>
+                  <p className="text-xs text-gray-400">Votos dos jogadores</p>
+                </div>
+                <div className="grid grid-cols-2 divide-x divide-gray-100">
+                  <div className="p-4">
+                    <p className="text-xs font-semibold text-yellow-600 mb-2">🏆 MVP</p>
+                    {awards.mvp.length === 0 ? (
+                      <p className="text-xs text-gray-400">Sem votos ainda</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {awards.mvp.map((a, i) => (
+                          <div key={a.player_id} className="flex items-center justify-between gap-2">
+                            <span className={`text-xs truncate ${i === 0 ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
+                              {i === 0 ? '★ ' : ''}{a.name}
+                            </span>
+                            <span className="text-xs font-semibold text-gray-500 flex-shrink-0">{a.votes}v</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <p className="text-xs font-semibold text-red-500 mb-2">💩 Pereba</p>
+                    {awards.pereba.length === 0 ? (
+                      <p className="text-xs text-gray-400">Sem votos ainda</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {awards.pereba.map((a, i) => (
+                          <div key={a.player_id} className="flex items-center justify-between gap-2">
+                            <span className={`text-xs truncate ${i === 0 ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
+                              {i === 0 ? '👎 ' : ''}{a.name}
+                            </span>
+                            <span className="text-xs font-semibold text-gray-500 flex-shrink-0">{a.votes}v</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </>

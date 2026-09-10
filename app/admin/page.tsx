@@ -20,7 +20,6 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState('')
   const [status, setStatus] = useState<AdminStatus | null>(null)
   const [loading, setLoading] = useState(false)
-  const [toggling, setToggling] = useState(false)
   const [closing, setClosing] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -74,21 +73,7 @@ export default function AdminPage() {
     setClosing(false)
   }
 
-  async function toggleReveal() {
-    if (!status) return
-    setToggling(true)
-    await fetch('/api/admin/reveal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ reveal: !status.results_revealed }),
-    })
-    await fetchStatus(password)
-    setMessage(!status.results_revealed ? 'Resultado revelado!' : 'Resultado ocultado.')
-    setTimeout(() => setMessage(''), 3000)
-    setToggling(false)
-  }
-
-  if (checking) {
+if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-gray-400 text-sm">Verificando sessão...</div>
@@ -250,33 +235,9 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Revelar resultado */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h2 className="font-semibold text-gray-900 mb-1">Resultado público</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            {status.results_revealed
-              ? 'O resultado está visível para todos.'
-              : 'O resultado está oculto. Revele após o sorteio.'}
-          </p>
-          <div className="flex gap-3">
-            <button
-              onClick={toggleReveal}
-              disabled={toggling}
-              className={`flex-1 h-11 font-semibold rounded-xl transition-colors text-sm ${
-                status.results_revealed
-                  ? 'bg-gray-600 hover:bg-gray-700 text-white'
-                  : 'bg-blue-700 hover:bg-blue-800 text-white'
-              } disabled:opacity-50`}
-            >
-              {toggling ? '...' : status.results_revealed ? 'Ocultar resultado' : 'Revelar resultado'}
-            </button>
-            <Link
-              href="/resultado"
-              className="px-4 h-11 flex items-center border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Ver →
-            </Link>
-          </div>
+        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
+          <p className="text-sm text-gray-500">Resultado e sorteio gerenciados em <strong>Rodada</strong>.</p>
+          <Link href="/admin/rodada" className="text-sm text-blue-600 hover:underline font-medium">Ir para Rodada →</Link>
         </div>
       </div>
     </div>
