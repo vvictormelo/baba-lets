@@ -346,8 +346,43 @@ export default function AdminRodadaPage() {
           </div>
         )}
 
-        {/* Criar rodada */}
-        {(!roundData?.round || roundData?.round?.status === 'closed') && (
+        {/* Rodada encerrada: mostra só card compacto + formulário nova rodada */}
+        {roundData?.round?.status === 'closed' && (
+          <>
+            <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Última rodada</p>
+                <p className="text-base font-bold text-gray-900">{formatDateLong(roundData.round.scheduled_date)}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 font-medium">Encerrada</span>
+                <Link href="/resultado" className="text-xs text-blue-600 hover:underline">Ver resultado →</Link>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border-2 border-blue-500 p-5">
+              <h2 className="font-semibold text-gray-900 mb-3">Nova rodada</h2>
+              <form onSubmit={handleCreateRound} className="flex gap-2">
+                <DateInput
+                  value={newDate}
+                  onChange={setNewDate}
+                  className="flex-1 h-10 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="px-4 h-10 bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors"
+                >
+                  {creating ? '...' : 'Criar'}
+                </button>
+              </form>
+            </div>
+          </>
+        )}
+
+        {/* Criar rodada (sem rodada alguma) */}
+        {!roundData?.round && (
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
             <h2 className="font-semibold text-gray-900 mb-3">Nova rodada</h2>
             <form onSubmit={handleCreateRound} className="flex gap-2">
@@ -368,7 +403,7 @@ export default function AdminRodadaPage() {
           </div>
         )}
 
-        {roundData?.round && (
+        {roundData?.round && roundData.round.status !== 'closed' && (
           <>
             {/* Info da rodada */}
             <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
