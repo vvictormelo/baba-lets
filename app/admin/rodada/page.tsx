@@ -68,6 +68,7 @@ export default function AdminRodadaPage() {
   const [buildingPots, setBuildingPots] = useState(false)
   const [drawing, setDrawing] = useState(false)
   const [closing, setClosing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -249,6 +250,25 @@ export default function AdminRodadaPage() {
     setAdicionandoNovato(false)
   }
 
+  async function handleDeleteRound() {
+    if (!roundData) return
+    if (!confirm(`Excluir a rodada de ${formatDate(roundData.round.scheduled_date)}? Esta ação não pode ser desfeita.`)) return
+    setDeleting(true)
+    setError('')
+    const res = await fetch(`/api/admin/rounds/${roundData.round.id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-password': password },
+    })
+    if (res.ok) {
+      setRoundData(null)
+      showMessage('Rodada excluída.')
+    } else {
+      const data = await res.json()
+      setError(data.error || 'Erro ao excluir')
+    }
+    setDeleting(false)
+  }
+
   function showMessage(msg: string) {
     setMessage(msg)
     setTimeout(() => setMessage(''), 4000)
@@ -415,9 +435,18 @@ export default function AdminRodadaPage() {
                   {drawn ? 'Sorteado' : 'Em preparação'}
                 </span>
               </div>
-              <span className={`text-2xl font-bold ${confirmedCount === 18 ? 'text-blue-700' : 'text-gray-400'}`}>
-                {confirmedCount}/18
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={`text-2xl font-bold ${confirmedCount === 18 ? 'text-blue-700' : 'text-gray-400'}`}>
+                  {confirmedCount}/18
+                </span>
+                <button
+                  onClick={handleDeleteRound}
+                  disabled={deleting}
+                  className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {deleting ? '...' : 'Excluir'}
+                </button>
+              </div>
             </div>
 
             {/* Cadastrar novato */}
