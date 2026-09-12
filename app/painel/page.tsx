@@ -432,14 +432,14 @@ export default function PainelPage() {
         )}
 
         {/* Ações rápidas */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Link href="/votar" className="block">
             <Card className="hover:border-primary/40 transition-colors h-full">
               <CardContent className="pt-4 pb-4 flex flex-col items-center gap-1">
                 <span className="text-2xl">🗳️</span>
-                <span className="text-sm font-semibold">Avaliar jogadores</span>
-                <span className="text-xs text-muted-foreground">
-                  {voteCount > 0 ? `${voteCount} voto${voteCount !== 1 ? 's' : ''} lançado${voteCount !== 1 ? 's' : ''}` : 'Nenhum voto ainda'}
+                <span className="text-xs font-semibold text-center">Avaliar</span>
+                <span className="text-xs text-muted-foreground text-center">
+                  {voteCount > 0 ? `${voteCount} voto${voteCount !== 1 ? 's' : ''}` : 'Nenhum ainda'}
                 </span>
               </CardContent>
             </Card>
@@ -448,8 +448,17 @@ export default function PainelPage() {
             <Card className="hover:border-primary/40 transition-colors h-full">
               <CardContent className="pt-4 pb-4 flex flex-col items-center gap-1">
                 <span className="text-2xl">📊</span>
-                <span className="text-sm font-semibold">Ranking</span>
-                <span className="text-xs text-muted-foreground">Ver classificação</span>
+                <span className="text-xs font-semibold text-center">Ranking</span>
+                <span className="text-xs text-muted-foreground text-center">Classificação</span>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/resultado" className="block">
+            <Card className="hover:border-primary/40 transition-colors h-full">
+              <CardContent className="pt-4 pb-4 flex flex-col items-center gap-1">
+                <span className="text-2xl">⚽</span>
+                <span className="text-xs font-semibold text-center">Resultado</span>
+                <span className="text-xs text-muted-foreground text-center">Ver times</span>
               </CardContent>
             </Card>
           </Link>

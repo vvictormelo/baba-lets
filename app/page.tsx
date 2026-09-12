@@ -239,11 +239,7 @@ export default function LoginPage() {
           </Card>
         )}
 
-        <div className="flex justify-center gap-4">
-          <a href="/ranking" className="text-xs text-primary hover:underline">Ver ranking</a>
-          <span className="text-xs text-muted-foreground">|</span>
-          <a href="/resultado" className="text-xs text-primary hover:underline">Ver resultado</a>
-          <span className="text-xs text-muted-foreground">|</span>
+        <div className="flex justify-center">
           <a href="/admin" className="text-xs text-muted-foreground hover:text-foreground">Admin</a>
         </div>
       </div>
