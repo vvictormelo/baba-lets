@@ -181,11 +181,11 @@ export default function PainelPage() {
 
   return (
     <PlayerLayout>
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-3 space-y-3">
         {/* Card da rodada */}
         {activeRound ? (
           <Card className={`border-2 ${cardBorder}`}>
-            <CardContent className="pt-5">
+            <CardContent className="pt-4 px-4 pb-4">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{roundCardLabel}</p>
@@ -252,7 +252,8 @@ export default function PainelPage() {
               {/* Botões de ação */}
               {!roundClosed && (
                 isConfirmed || isSuplente ? (
-                  <Button variant="outline" className="w-full border-destructive/40 text-destructive hover:bg-destructive/5"
+                  <Button variant="outline" size="lg"
+                    className="w-full border-destructive/40 text-destructive hover:bg-destructive/5"
                     onClick={() => handleCheckin(false)} disabled={checkingIn}>
                     {checkingIn ? '...' : 'Cancelar presença'}
                   </Button>
@@ -261,12 +262,13 @@ export default function PainelPage() {
                     {checkingIn ? 'Confirmando...' : 'Confirmar presença'}
                   </Button>
                 ) : (
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <Button className="flex-1" size="lg" onClick={() => handleCheckin(true)} disabled={checkingIn}>
-                      {checkingIn ? '...' : 'Confirmar presença'}
+                      {checkingIn ? '...' : 'Confirmar'}
                     </Button>
-                    <Button variant="outline" className="flex-1 border-destructive/40 text-destructive hover:bg-destructive/5"
-                      size="lg" onClick={() => handleCheckin(false)} disabled={checkingIn}>
+                    <Button variant="outline" size="lg"
+                      className="flex-1 border-destructive/40 text-destructive hover:bg-destructive/5"
+                      onClick={() => handleCheckin(false)} disabled={checkingIn}>
                       {checkingIn ? '...' : 'Não vou'}
                     </Button>
                   </div>
@@ -282,9 +284,9 @@ export default function PainelPage() {
               {/* Potes da rodada */}
               {activeRound.potes.length > 0 && (
                 <>
-                  <Separator className="my-4" />
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Potes da rodada</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <Separator className="my-3" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Potes da rodada</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                     {[1,2,3,4,5,6].map(pote => {
                       const jogadores = activeRound.potes.filter(p => p.pote === pote)
                       if (!jogadores.length) return null
@@ -309,7 +311,7 @@ export default function PainelPage() {
           </Card>
         ) : (
           <Card>
-            <CardContent className="pt-6 text-center">
+            <CardContent className="pt-5 pb-5 text-center">
               <p className="text-3xl mb-2">📅</p>
               <p className="text-muted-foreground text-sm">Nenhuma rodada agendada no momento.</p>
               <p className="text-muted-foreground/60 text-xs mt-1">O admin vai cadastrar quando tiver data definida.</p>

@@ -8,6 +8,7 @@ import {
   Users,
   History,
   UserCheck,
+  ChevronLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,13 +31,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex bg-background">
       {/* ── Sidebar desktop ── */}
       <aside className="hidden md:flex flex-col w-56 border-r border-border bg-card fixed h-screen z-30">
-        {/* Brand */}
         <div className="px-4 py-5 border-b border-border">
-          <p className="text-sm font-bold text-foreground">Baba Lets</p>
+          <p className="text-sm font-bold">Baba Lets</p>
           <p className="text-xs text-muted-foreground">Painel admin</p>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {NAV.map(item => {
             const active = isActive(item.href, item.exact ?? false)
@@ -57,16 +56,40 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             )
           })}
         </nav>
+
+        {/* Voltar ao app */}
+        <div className="p-2 border-t border-border">
+          <Link
+            href="/painel"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Voltar ao app
+          </Link>
+        </div>
       </aside>
 
-      {/* ── Content area ── */}
-      <main className="flex-1 md:ml-56 pb-20 md:pb-0 min-h-screen">
+      {/* ── Content ── */}
+      <main className="flex-1 md:ml-56 pb-nav md:pb-0 min-h-screen">
         {children}
       </main>
 
       {/* ── Bottom nav mobile ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 safe-area-pb">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 nav-safe-pb">
         <div className="flex">
+          {/* Voltar ao app */}
+          <Link
+            href="/painel"
+            className="flex flex-col items-center justify-center py-2 gap-0.5 min-h-[56px] px-3 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Voltar ao app"
+          >
+            <ChevronLeft className="w-[22px] h-[22px]" />
+            <span className="text-[9px] font-medium leading-tight">Início</span>
+          </Link>
+
+          {/* Separador vertical */}
+          <div className="w-px bg-border my-3" />
+
           {NAV.map(item => {
             const active = isActive(item.href, item.exact ?? false)
             return (
@@ -74,12 +97,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex-1 flex flex-col items-center py-2.5 gap-0.5 transition-colors',
+                  'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 min-h-[56px] transition-colors',
                   active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[9px] font-medium leading-tight">{item.label}</span>
+                <item.icon className="w-[20px] h-[20px]" />
+                <span className="text-[8px] font-medium leading-tight">{item.label}</span>
               </Link>
             )
           })}
