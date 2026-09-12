@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
 import { formatDate, formatDateLong } from '@/lib/format'
 import { Button } from '@/components/ui/button'
@@ -10,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
+import { PlayerLayout } from '@/components/PlayerLayout'
 
 interface HistoryEntry {
   round_id: number
@@ -180,20 +180,7 @@ export default function PainelPage() {
   const cardBorder = isConfirmed ? 'border-primary' : isSuplente ? 'border-yellow-400' : isAbsent ? 'border-destructive/50' : 'border-border'
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="bg-card border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Let's Baba" width={120} height={40} className="h-9 w-auto" priority />
-            <p className="text-sm text-muted-foreground border-l border-border pl-3">{voterName}</p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => { sessionStorage.clear(); router.replace('/') }}>
-            Sair
-          </Button>
-        </div>
-      </div>
-
+    <PlayerLayout>
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {/* Card da rodada */}
         {activeRound ? (
@@ -493,7 +480,7 @@ export default function PainelPage() {
           </Card>
         )}
       </div>
-    </div>
+    </PlayerLayout>
   )
 }
 
