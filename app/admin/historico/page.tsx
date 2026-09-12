@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { AdminLayout } from '@/components/AdminLayout'
 import { formatDateLong } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -109,18 +110,12 @@ export default function AdminHistoricoPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-card border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold">Histórico de rodadas</h1>
-            <p className="text-xs text-muted-foreground">{rounds.length} rodada{rounds.length !== 1 ? 's' : ''} registrada{rounds.length !== 1 ? 's' : ''}</p>
-          </div>
-          <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">← Admin</Link>
+    <AdminLayout>
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="mb-4">
+          <h1 className="text-xl font-bold">Histórico de rodadas</h1>
+          <p className="text-xs text-muted-foreground">{rounds.length} rodada{rounds.length !== 1 ? 's' : ''} registrada{rounds.length !== 1 ? 's' : ''}</p>
         </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-4">
         {loading && <p className="text-center text-muted-foreground text-sm py-8">Carregando...</p>}
         {!loading && rounds.length === 0 && (
           <Card className="p-8 text-center">
@@ -246,6 +241,6 @@ export default function AdminHistoricoPage() {
           })}
         </Accordion>
       </div>
-    </div>
+    </AdminLayout>
   )
 }

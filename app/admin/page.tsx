@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
+import { AdminLayout } from '@/components/AdminLayout'
 
 interface AdminStatus {
   total: number
@@ -121,21 +122,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="bg-card border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold">Admin — Baba Lets</h1>
-          <nav className="flex gap-3 text-sm">
-            <Link href="/admin/jogadores" className="text-primary hover:underline">Jogadores</Link>
-            <Link href="/admin/rodada" className="text-primary hover:underline">Rodada</Link>
-            <Link href="/admin/historico" className="text-primary hover:underline">Histórico</Link>
-            <Link href="/admin/presenca" className="text-primary hover:underline">Presença</Link>
-          </nav>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+    <AdminLayout>
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <h1 className="text-xl font-bold">Dashboard</h1>
         {/* Rodada ativa */}
         <Card>
           <CardHeader className="pb-3">
@@ -236,6 +225,6 @@ export default function AdminPage() {
           <Link href="/admin/rodada" className="text-sm text-primary hover:underline">Ir para Rodada →</Link>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   )
 }

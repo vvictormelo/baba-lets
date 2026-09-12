@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { DateInput } from '@/components/DateInput'
 import { formatDate, formatDateLong } from '@/lib/format'
+import { AdminLayout } from '@/components/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -364,7 +365,8 @@ export default function AdminRodadaPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <AdminLayout>
+    <div>
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -391,8 +393,7 @@ export default function AdminRodadaPage() {
                 </form>
               </DialogContent>
             </Dialog>
-            <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">← Admin</Link>
-          </div>
+            </div>
         </div>
       </div>
 
@@ -742,5 +743,6 @@ export default function AdminRodadaPage() {
         </Accordion>
       </div>
     </div>
+    </AdminLayout>
   )
 }

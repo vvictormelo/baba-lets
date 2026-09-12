@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { AdminLayout } from '@/components/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -131,15 +132,9 @@ export default function AdminJogadoresPage() {
   const inactive = players.filter(p => !p.active)
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-card border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold">Jogadores</h1>
-          <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">← Admin</Link>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+    <AdminLayout>
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <h1 className="text-xl font-bold">Jogadores</h1>
         {/* Adicionar jogador */}
         <form onSubmit={handleAdd} className="flex gap-2">
           <input
@@ -242,6 +237,6 @@ export default function AdminJogadoresPage() {
           </>
         )}
       </div>
-    </div>
+    </AdminLayout>
   )
 }
