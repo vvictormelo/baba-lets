@@ -33,11 +33,13 @@ export async function POST(
     return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } })
   }
 
-  // Verifica limite de 18
-  const { count } = await supabase
-    .from('round_participants')
-    .select('*', { count: 'exact', head: true })
-    .eq('round_id', round_id)
+  // Verifica se o jogador é goleiro (vaga garantida fora dos 18)
+  const { data: playerData } = await supabase
+    .from('players')
+    .select('is_goalkeeper')
+    .eq('id', player_id)
+    .single()
+  const isGoalkeeper = playerData?.is_goalkeeper ?? false
 
   const alreadyIn = await supabase
     .from('round_participants')
@@ -46,8 +48,17 @@ export async function POST(
     .eq('player_id', player_id)
     .single()
 
-  if (!alreadyIn.data && (count ?? 0) >= 18) {
-    return NextResponse.json({ error: 'Rodada já tem 18 participantes' }, { status: 409 })
+  if (!alreadyIn.data && !isGoalkeeper) {
+    // Conta apenas jogadores de linha para o limite de 18
+    const { data: fieldParticipants } = await supabase
+      .from('round_participants')
+      .select('player_id, players!inner(is_goalkeeper)')
+      .eq('round_id', round_id)
+    const fieldCount = (fieldParticipants || []).filter(p => !(p.players as unknown as { is_goalkeeper: boolean }).is_goalkeeper).length
+
+    if (fieldCount >= 18) {
+      return NextResponse.json({ error: 'Rodada já tem 18 participantes' }, { status: 409 })
+    }
   }
 
   const row: Record<string, unknown> = { round_id, player_id }

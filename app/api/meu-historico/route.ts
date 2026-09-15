@@ -30,18 +30,20 @@ export async function GET(req: NextRequest) {
   } | null = null
 
   if (activeRoundId) {
-    const [{ data: round }, { count }, { data: roundPots }] = await Promise.all([
+    const [{ data: round }, { data: participantsForCount }, { data: roundPots }] = await Promise.all([
       supabase.from('rounds').select('id, scheduled_date, status').eq('id', activeRoundId).single(),
-      supabase.from('round_participants').select('*', { count: 'exact', head: true }).eq('round_id', activeRoundId),
+      supabase.from('round_participants').select('player_id, players!inner(is_goalkeeper)').eq('round_id', activeRoundId),
       supabase.from('round_pots').select('pote, player_id, players(name)').eq('round_id', activeRoundId).order('pote'),
     ])
     if (round) {
+      // Conta apenas jogadores de linha (exclui goleiros) para exibir X/18 corretamente
+      const fieldCount = (participantsForCount || []).filter(p => !(p.players as unknown as { is_goalkeeper: boolean }).is_goalkeeper).length
       const potes = (roundPots || []).map(p => ({
         pote: p.pote,
         player_id: p.player_id,
         name: (p.players as unknown as { name: string })?.name ?? '',
       }))
-      activeRound = { ...round, confirmados: count ?? 0, potes }
+      activeRound = { ...round, confirmados: fieldCount, potes }
     }
   }
 

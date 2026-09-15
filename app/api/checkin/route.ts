@@ -52,6 +52,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, confirmado: false }, { headers: { 'Cache-Control': 'no-store' } })
   }
 
+  // Verifica se o jogador é goleiro (vaga garantida fora dos 18)
+  const { data: playerData } = await supabase
+    .from('players')
+    .select('is_goalkeeper')
+    .eq('id', player_id)
+    .single()
+  const isGoalkeeper = playerData?.is_goalkeeper ?? false
+
   // Verifica se já está como participante (não conta no limite)
   const { data: existing } = await supabase
     .from('round_participants')
@@ -62,18 +70,26 @@ export async function POST(req: NextRequest) {
 
   let isSuplente = false
   if (!existing) {
-    const { count } = await supabase
-      .from('round_participants')
-      .select('*', { count: 'exact', head: true })
-      .eq('round_id', roundId)
-
-    if ((count ?? 0) >= 18) {
-      // Registra como confirmado mas sinaliza que é suplente
-      isSuplente = true
-    } else {
+    if (isGoalkeeper) {
+      // Goleiro tem vaga garantida, não entra no limite dos 18
       await supabase
         .from('round_participants')
         .upsert({ round_id: roundId, player_id }, { onConflict: 'round_id,player_id' })
+    } else {
+      // Conta apenas jogadores de linha (sem goleiros) para o limite
+      const { data: fieldParticipants } = await supabase
+        .from('round_participants')
+        .select('player_id, players!inner(is_goalkeeper)')
+        .eq('round_id', roundId)
+      const fieldCount = (fieldParticipants || []).filter(p => !(p.players as unknown as { is_goalkeeper: boolean }).is_goalkeeper).length
+
+      if (fieldCount >= 18) {
+        isSuplente = true
+      } else {
+        await supabase
+          .from('round_participants')
+          .upsert({ round_id: roundId, player_id }, { onConflict: 'round_id,player_id' })
+      }
     }
   }
 

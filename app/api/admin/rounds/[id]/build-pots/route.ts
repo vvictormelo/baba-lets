@@ -16,16 +16,21 @@ export async function POST(
   const round_id = Number(params.id)
   const supabase = createServerClient()
 
-  // Valida 18 participantes
-  const { data: participants, error: pErr } = await supabase
+  // Busca participantes excluindo goleiros (que têm vaga garantida fora dos 18)
+  const { data: allParticipants, error: pErr } = await supabase
     .from('round_participants')
-    .select('player_id, is_novice, manual_pote')
+    .select('player_id, is_novice, manual_pote, players!inner(is_goalkeeper)')
     .eq('round_id', round_id)
 
   if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 })
-  if (!participants || participants.length !== ROUND_SIZE) {
+
+  const participants = (allParticipants || []).filter(
+    p => !(p.players as unknown as { is_goalkeeper: boolean }).is_goalkeeper
+  )
+
+  if (participants.length !== ROUND_SIZE) {
     return NextResponse.json(
-      { error: `Rodada precisa de exatamente ${ROUND_SIZE} participantes` },
+      { error: `Rodada precisa de exatamente ${ROUND_SIZE} jogadores de linha` },
       { status: 400 }
     )
   }
