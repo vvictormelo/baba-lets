@@ -20,7 +20,7 @@ export async function GET() {
     { data: attendance },
     { data: participants },
   ] = await Promise.all([
-    supabase.from('players').select('id, name').eq('active', true).order('name'),
+    supabase.from('players').select('id, name, is_goalkeeper').eq('active', true).order('name'),
     supabase.from('round_attendance').select('player_id, status').eq('round_id', round.id),
     supabase.from('round_participants').select('player_id').eq('round_id', round.id),
   ])
@@ -30,10 +30,10 @@ export async function GET() {
     (attendance || []).map(a => [a.player_id, a.status])
   )
 
-  const confirmados: { id: number; name: string }[] = []
-  const suplentes: { id: number; name: string }[] = []
-  const ausentes: { id: number; name: string }[] = []
-  const pendentes: { id: number; name: string }[] = []
+  const confirmados: { id: number; name: string; is_goalkeeper: boolean }[] = []
+  const suplentes: { id: number; name: string; is_goalkeeper: boolean }[] = []
+  const ausentes: { id: number; name: string; is_goalkeeper: boolean }[] = []
+  const pendentes: { id: number; name: string; is_goalkeeper: boolean }[] = []
 
   for (const p of players || []) {
     const status = attendanceMap[p.id]

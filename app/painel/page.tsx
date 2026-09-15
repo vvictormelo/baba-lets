@@ -39,7 +39,7 @@ interface HistoricoData {
   history: HistoryEntry[]
 }
 
-interface PlayerItem { id: number; name: string }
+interface PlayerItem { id: number; name: string; is_goalkeeper?: boolean }
 
 interface ListaPresenca {
   round: { id: number; scheduled_date: string; status: string } | null
@@ -506,7 +506,7 @@ function PresencaGrupo({ titulo, cor, jogadores, voterId }: {
         {jogadores.map(j => (
           <span key={j.id}
             className={`text-xs px-2.5 py-1 rounded-full font-medium ${c.badge} ${j.id === voterId ? 'ring-2 ring-offset-1 ring-current' : ''}`}>
-            {j.name}
+            {j.name}{j.is_goalkeeper ? ' 🧤' : ''}
           </span>
         ))}
       </div>
