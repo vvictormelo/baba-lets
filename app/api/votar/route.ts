@@ -31,22 +31,26 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServerClient()
 
-  const { data: voter } = await supabase
-    .from('players')
-    .select('id')
-    .eq('id', voter_id)
-    .eq('active', true)
-    .single()
+  const [{ data: voter }, { data: roundSetting }] = await Promise.all([
+    supabase.from('players').select('id').eq('id', voter_id).eq('active', true).single(),
+    supabase.from('baba_settings').select('value').eq('key', 'active_round_id').single(),
+  ])
 
   if (!voter) {
     return NextResponse.json({ error: 'Jogador não encontrado' }, { status: 404 })
   }
 
-  // Busca votos existentes para registrar a mudança no histórico
+  const round_id = roundSetting?.value ? Number(roundSetting.value) : null
+  if (!round_id) {
+    return NextResponse.json({ error: 'Nenhuma rodada ativa' }, { status: 400 })
+  }
+
+  // Busca votos existentes desta rodada para registrar a mudança no histórico
   const voteeIds = votes.map(v => v.votee_id)
   const { data: existing } = await supabase
     .from('votes')
     .select('votee_id, pote, points')
+    .eq('round_id', round_id)
     .eq('voter_id', voter_id)
     .in('votee_id', voteeIds)
 
@@ -55,6 +59,7 @@ export async function POST(req: NextRequest) {
   )
 
   const rows = votes.map(v => ({
+    round_id,
     voter_id,
     votee_id: v.votee_id,
     pote: v.pote,
@@ -63,12 +68,13 @@ export async function POST(req: NextRequest) {
 
   const { error } = await supabase
     .from('votes')
-    .upsert(rows, { onConflict: 'voter_id,votee_id' })
+    .upsert(rows, { onConflict: 'round_id,voter_id,votee_id' })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Grava histórico de cada voto (novo ou alterado)
   const historyRows = votes.map(v => ({
+    round_id,
     voter_id,
     votee_id: v.votee_id,
     pote: v.pote,

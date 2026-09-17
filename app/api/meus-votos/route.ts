@@ -11,10 +11,22 @@ export async function GET(req: NextRequest) {
 
   const supabase = createServerClient()
 
-  const { data, error } = await supabase
+  const { data: roundSetting } = await supabase
+    .from('baba_settings')
+    .select('value')
+    .eq('key', 'active_round_id')
+    .single()
+
+  const round_id = roundSetting?.value ? Number(roundSetting.value) : null
+
+  let query = supabase
     .from('votes')
     .select('votee_id, pote, points')
     .eq('voter_id', Number(voter_id))
+
+  if (round_id) query = query.eq('round_id', round_id)
+
+  const { data, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

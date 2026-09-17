@@ -50,21 +50,26 @@ export async function GET() {
     .eq('round_id', roundId)
     .order('pote')
 
-  // MVP e Pereba: ranking global filtrado pelos participantes desta rodada
-  const participantIds = (pots || []).map(p => p.player_id)
+  // MVP e Pereba: calculados a partir dos votos desta rodada específica
   let mvp: { id: number; name: string; total_points: number } | null = null
   let pereba: { id: number; name: string; total_points: number } | null = null
 
-  if (participantIds.length > 0) {
-    const { data: rankings } = await supabase
-      .from('player_ranking')
-      .select('id, name, total_points, ranking_index')
-      .in('id', participantIds)
-      .order('total_points', { ascending: false })
+  const { data: roundVotes } = await supabase
+    .from('votes')
+    .select('votee_id, points, players(id, name)')
+    .eq('round_id', roundId)
 
-    if (rankings && rankings.length > 0) {
-      mvp = rankings[0]
-      pereba = rankings[rankings.length - 1]
+  if (roundVotes && roundVotes.length > 0) {
+    const totals = new Map<number, { id: number; name: string; total_points: number }>()
+    for (const v of roundVotes) {
+      const player = v.players as unknown as { id: number; name: string }
+      const prev = totals.get(v.votee_id) ?? { id: player.id, name: player.name, total_points: 0 }
+      totals.set(v.votee_id, { ...prev, total_points: prev.total_points + v.points })
+    }
+    const sorted = [...totals.values()].sort((a, b) => b.total_points - a.total_points)
+    if (sorted.length > 0) {
+      mvp = sorted[0]
+      pereba = sorted[sorted.length - 1]
     }
   }
 
