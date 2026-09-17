@@ -70,8 +70,8 @@ export async function GET() {
       const pp = perebaCount.get(row.pereba_id) ?? { id: p.id, name: p.name, votes: 0 }
       perebaCount.set(row.pereba_id, { ...pp, votes: pp.votes + 1 })
     }
-    mvp = [...mvpCount.values()].sort((a, b) => b.votes - a.votes)[0] ?? null
-    pereba = [...perebaCount.values()].sort((a, b) => b.votes - a.votes)[0] ?? null
+    mvp = Array.from(mvpCount.values()).sort((a, b) => b.votes - a.votes)[0] ?? null
+    pereba = Array.from(perebaCount.values()).sort((a, b) => b.votes - a.votes)[0] ?? null
   }
 
   return NextResponse.json(
