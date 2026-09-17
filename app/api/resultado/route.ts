@@ -50,8 +50,26 @@ export async function GET() {
     .eq('round_id', roundId)
     .order('pote')
 
+  // MVP e Pereba: ranking global filtrado pelos participantes desta rodada
+  const participantIds = (pots || []).map(p => p.player_id)
+  let mvp: { id: number; name: string; total_points: number } | null = null
+  let pereba: { id: number; name: string; total_points: number } | null = null
+
+  if (participantIds.length > 0) {
+    const { data: rankings } = await supabase
+      .from('player_ranking')
+      .select('id, name, total_points, ranking_index')
+      .in('id', participantIds)
+      .order('total_points', { ascending: false })
+
+    if (rankings && rankings.length > 0) {
+      mvp = rankings[0]
+      pereba = rankings[rankings.length - 1]
+    }
+  }
+
   return NextResponse.json(
-    { revealed: true, round, teams: teams || [], pots: pots || [] },
+    { revealed: true, round, teams: teams || [], pots: pots || [], mvp, pereba },
     { headers: { 'Cache-Control': 'no-store' } }
   )
 }
