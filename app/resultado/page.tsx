@@ -12,18 +12,11 @@ interface TeamEntry {
 interface PotEntry {
   player_id: number; pote: number; players: { id: number; name: string }
 }
-interface PlayerHighlight {
-  id: number
-  name: string
-  total_points: number
-}
 interface ResultData {
   revealed: boolean
   round?: { id: number; scheduled_date: string; status: string }
   teams?: TeamEntry[]
   pots?: PotEntry[]
-  mvp?: PlayerHighlight | null
-  pereba?: PlayerHighlight | null
 }
 
 const POTE_CLS: Record<number, string> = {
@@ -68,7 +61,7 @@ export default function ResultadoPage() {
     )
   }
 
-  const { round, teams = [], pots = [], mvp, pereba } = data
+  const { round, teams = [], pots = [] } = data
 
   const byTeam: Record<number, TeamEntry[]> = {}
   for (const e of teams) { if (!byTeam[e.team]) byTeam[e.team] = []; byTeam[e.team].push(e) }
@@ -85,34 +78,6 @@ export default function ResultadoPage() {
             <p className="text-sm text-muted-foreground">{formatDate(round.scheduled_date)}</p>
           )}
         </div>
-
-        {/* MVP e Pereba */}
-        {(mvp || pereba) && (
-          <div className="grid grid-cols-2 gap-3">
-            {mvp && (
-              <div className="rounded-2xl border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 overflow-hidden">
-                <div className="bg-yellow-400 dark:bg-yellow-500 px-3 py-1.5 text-center">
-                  <span className="text-xs font-bold text-yellow-900 uppercase tracking-wide">🏆 MVP da rodada</span>
-                </div>
-                <div className="px-4 py-3 text-center">
-                  <p className="font-bold text-base leading-tight">{mvp.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{mvp.total_points} pts</p>
-                </div>
-              </div>
-            )}
-            {pereba && (
-              <div className="rounded-2xl border-2 border-slate-300 bg-slate-50 dark:bg-slate-900/40 overflow-hidden">
-                <div className="bg-slate-300 dark:bg-slate-700 px-3 py-1.5 text-center">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">🥴 Pereba da rodada</span>
-                </div>
-                <div className="px-4 py-3 text-center">
-                  <p className="font-bold text-base leading-tight">{pereba.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{pereba.total_points} pts</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Times */}
         <div>

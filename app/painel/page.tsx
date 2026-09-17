@@ -324,10 +324,15 @@ export default function PainelPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">MVP e Pereba da rodada</CardTitle>
-              <p className="text-xs text-muted-foreground">Escolha o melhor e o pior da pelada</p>
+              {activeRound.status === 'drawn' ? (
+                <p className="text-xs text-muted-foreground">Escolha o melhor e o pior da pelada</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Votação encerrada — resultado final</p>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
-              {activeRound.potes.length > 0 && (
+              {/* Formulário só quando sorteada (drawn), não quando fechada (closed) */}
+              {activeRound.status === 'drawn' && activeRound.potes.length > 0 && (
                 <form onSubmit={handleAwardSubmit} className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -358,10 +363,11 @@ export default function PainelPage() {
                 </form>
               )}
 
+              {/* Placar de votos */}
               {awards && (awards.mvp.length > 0 || awards.pereba.length > 0) && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-muted/30 rounded-lg p-3">
-                    <p className="text-xs font-semibold text-yellow-600 mb-2">🏆 MVP</p>
+                  <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-xs font-semibold text-yellow-700 mb-2">🏆 MVP</p>
                     <div className="space-y-1">
                       {awards.mvp.slice(0, 5).map((a, i) => (
                         <div key={a.player_id} className="flex items-center justify-between gap-1">

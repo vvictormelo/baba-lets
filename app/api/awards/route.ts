@@ -82,8 +82,8 @@ export async function POST(req: NextRequest) {
     .eq('id', round_id)
     .single()
 
-  if (!round || (round.status !== 'drawn' && round.status !== 'closed')) {
-    return NextResponse.json({ error: 'Rodada não está disponível para votação' }, { status: 409 })
+  if (!round || round.status !== 'drawn') {
+    return NextResponse.json({ error: 'Votação de MVP/Pereba encerrada para esta rodada' }, { status: 409 })
   }
 
   const { error } = await supabase
