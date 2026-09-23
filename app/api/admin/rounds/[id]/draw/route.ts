@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { checkAdminAuth } from '@/lib/admin-auth'
+import { isValidRoundSize } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export async function POST(
     .eq('round_id', round_id)
 
   if (potErr) return NextResponse.json({ error: potErr.message }, { status: 500 })
-  if (!pots || pots.length !== 18) {
+  if (!pots || !isValidRoundSize(pots.length)) {
     return NextResponse.json({ error: 'Monte os potes antes de sortear' }, { status: 400 })
   }
 

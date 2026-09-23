@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { checkAdminAuth } from '@/lib/admin-auth'
-import { ROUND_SIZE, POT_SIZE } from '@/lib/constants'
+import { POT_SIZE, VALID_ROUND_SIZES, isValidRoundSize } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,12 +28,19 @@ export async function POST(
     p => !(p.players as unknown as { is_goalkeeper: boolean }).is_goalkeeper
   )
 
-  if (participants.length !== ROUND_SIZE) {
+  // A quantidade de potes acompanha o total de jogadores de linha, sempre com
+  // POT_SIZE por pote: 12 -> 4 potes, 15 -> 5, 18 -> 6. Assim cada time recebe
+  // 1 jogador de cada pote e os tres times saem do mesmo tamanho.
+  if (!isValidRoundSize(participants.length)) {
     return NextResponse.json(
-      { error: `Rodada precisa de exatamente ${ROUND_SIZE} jogadores de linha` },
+      {
+        error: `Rodada precisa de ${VALID_ROUND_SIZES.join(', ')} jogadores de linha. Atual: ${participants.length}`,
+      },
       { status: 400 }
     )
   }
+
+  const potCount = participants.length / POT_SIZE
 
   // Valida novatos com pote manual
   const novatos = participants.filter(p => p.is_novice)
@@ -41,6 +48,15 @@ export async function POST(
   if (invalidNovatos.length > 0) {
     return NextResponse.json(
       { error: 'Todos os novatos precisam ter um pote manual definido' },
+      { status: 400 }
+    )
+  }
+
+  // Com menos potes, um pote manual alto deixa de existir nesta rodada
+  const novatosForaDoIntervalo = novatos.filter(p => p.manual_pote! > potCount)
+  if (novatosForaDoIntervalo.length > 0) {
+    return NextResponse.json(
+      { error: `Esta rodada tem ${potCount} potes. Ajuste o pote dos novatos para no maximo ${potCount}.` },
       { status: 400 }
     )
   }
@@ -65,7 +81,8 @@ export async function POST(
     .map(r => r.id)
 
   // Inicializa potes com novatos
-  const potes: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
+  const poteNums = Array.from({ length: potCount }, (_, i) => i + 1)
+  const potes: Record<number, number[]> = Object.fromEntries(poteNums.map(n => [n, [] as number[]]))
   for (const novato of novatos) {
     potes[novato.manual_pote!].push(novato.player_id)
   }
@@ -80,9 +97,9 @@ export async function POST(
     }
   }
 
-  // Preenche potes 1→6 com ranqueados
+  // Preenche os potes em ordem com os ranqueados
   const queue = [...sortedRegular]
-  for (const poteNum of [1, 2, 3, 4, 5, 6]) {
+  for (const poteNum of poteNums) {
     const vagas = POT_SIZE - potes[poteNum].length
     potes[poteNum].push(...queue.splice(0, vagas))
   }

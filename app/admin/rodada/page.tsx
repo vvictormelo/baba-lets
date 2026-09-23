@@ -23,6 +23,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { toast } from 'sonner'
+import { isValidRoundSize, VALID_ROUND_SIZES } from '@/lib/constants'
 
 interface Player { id: number; name: string; active: boolean; is_goalkeeper?: boolean }
 
@@ -425,10 +426,14 @@ export default function AdminRodadaPage() {
             const goalkeeperIds = new Set(allPlayers.filter(p => p.is_goalkeeper).map(p => p.id))
             const fieldCount = Array.from(confirmedIds).filter(id => !goalkeeperIds.has(id)).length
             const goalkeeperCount = confirmedIds.size - fieldCount
-            const potsBuilt = (details?.pots?.length ?? 0) >= 18
+            const potsBuilt = (details?.pots?.length ?? 0) > 0
             const drawn = r.status === 'drawn' || r.status === 'closed'
             const canSubstitute = r.status === 'drawn'
-            const canBuildPots = fieldCount === 18 && !potsBuilt && r.status !== 'drawn' && r.status !== 'closed'
+            // Potes de 3: a quantidade de potes acompanha o total (12 -> 4, 15 -> 5, 18 -> 6)
+            const validSize = isValidRoundSize(fieldCount)
+            // Remontar e permitido enquanto nao sorteou: o build-pots limpa round_pots
+            // e round_teams antes de inserir, e o elenco pode mudar de 15 para 18.
+            const canBuildPots = validSize && r.status !== 'drawn' && r.status !== 'closed'
 
             const byPote: Record<number, PotEntry[]> = {}
             for (const p of details?.pots || []) {
@@ -489,6 +494,11 @@ export default function AdminRodadaPage() {
                             {buildingPots === r.id ? 'Montando...' : potsBuilt ? 'Remontar potes' : 'Montar potes'}
                           </Button>
                         )}
+                        {r.status !== 'closed' && r.status !== 'drawn' && !validSize && (
+                          <span className="text-xs text-muted-foreground self-center">
+                            Precisa de {VALID_ROUND_SIZES.join(', ')} jogadores de linha
+                          </span>
+                        )}
                         {potsBuilt && r.status !== 'drawn' && r.status !== 'closed' && (
                           <Button
                             size="sm"
@@ -546,7 +556,7 @@ export default function AdminRodadaPage() {
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <p className="text-sm font-semibold">
-                                Participantes <span className={`${fieldCount === 18 ? 'text-primary' : 'text-muted-foreground'}`}>{fieldCount}/18 linha</span>
+                                Participantes <span className={`${validSize ? 'text-primary' : 'text-muted-foreground'}`}>{fieldCount}/18 linha</span>
                                 {goalkeeperCount > 0 && (
                                   <span className="text-muted-foreground font-normal"> + {goalkeeperCount} {goalkeeperCount === 1 ? 'goleiro' : 'goleiros'}</span>
                                 )}
