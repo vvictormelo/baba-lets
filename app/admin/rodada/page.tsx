@@ -24,13 +24,15 @@ import {
 } from '@/components/ui/accordion'
 import { toast } from 'sonner'
 
-interface Player { id: number; name: string; active: boolean }
+interface Player { id: number; name: string; active: boolean; is_goalkeeper?: boolean }
 
 interface RoundSummary {
   id: number
   scheduled_date: string
   status: string
   participant_count: number
+  field_count: number
+  goalkeeper_count: number
 }
 
 interface RoundParticipant {
@@ -418,11 +420,15 @@ export default function AdminRodadaPage() {
             const awards = awardsMap[r.id]
             const isActive = r.id === activeRoundId
             const confirmedIds = new Set((details?.participants || []).map(p => p.player_id))
-            const confirmedCount = confirmedIds.size
+            // Goleiros tem vaga garantida fora dos 18 e nao entram na montagem dos potes,
+            // entao a contagem que vale para liberar o sorteio e so a dos jogadores de linha.
+            const goalkeeperIds = new Set(allPlayers.filter(p => p.is_goalkeeper).map(p => p.id))
+            const fieldCount = Array.from(confirmedIds).filter(id => !goalkeeperIds.has(id)).length
+            const goalkeeperCount = confirmedIds.size - fieldCount
             const potsBuilt = (details?.pots?.length ?? 0) >= 18
             const drawn = r.status === 'drawn' || r.status === 'closed'
             const canSubstitute = r.status === 'drawn'
-            const canBuildPots = confirmedCount === 18 && !potsBuilt && r.status !== 'drawn' && r.status !== 'closed'
+            const canBuildPots = fieldCount === 18 && !potsBuilt && r.status !== 'drawn' && r.status !== 'closed'
 
             const byPote: Record<number, PotEntry[]> = {}
             for (const p of details?.pots || []) {
@@ -450,7 +456,12 @@ export default function AdminRodadaPage() {
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge variant={st.variant} className="text-xs h-5">{st.label}</Badge>
                         {isActive && <Badge variant="outline" className="text-xs h-5 border-primary/50 text-primary">Ativa</Badge>}
-                        <span className="text-xs text-muted-foreground">{r.participant_count}/18</span>
+                        <span className="text-xs text-muted-foreground">{r.field_count}/18 linha</span>
+                        {r.goalkeeper_count > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{r.goalkeeper_count} {r.goalkeeper_count === 1 ? 'goleiro' : 'goleiros'}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -535,7 +546,10 @@ export default function AdminRodadaPage() {
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <p className="text-sm font-semibold">
-                                Participantes <span className={`${confirmedCount === 18 ? 'text-primary' : 'text-muted-foreground'}`}>{confirmedCount}/18</span>
+                                Participantes <span className={`${fieldCount === 18 ? 'text-primary' : 'text-muted-foreground'}`}>{fieldCount}/18 linha</span>
+                                {goalkeeperCount > 0 && (
+                                  <span className="text-muted-foreground font-normal"> + {goalkeeperCount} {goalkeeperCount === 1 ? 'goleiro' : 'goleiros'}</span>
+                                )}
                               </p>
                               <Button
                                 variant="ghost"
@@ -571,6 +585,7 @@ export default function AdminRodadaPage() {
                             <div className="border border-border rounded-lg divide-y divide-border max-h-80 overflow-y-auto">
                               {allPlayers.filter(p => p.active).map(player => {
                                 const isConfirmed = confirmedIds.has(player.id)
+                                const isGoalkeeper = !!player.is_goalkeeper
                                 const participant = details.participants.find(p => p.player_id === player.id)
                                 const isNovice = participant?.is_novice ?? false
                                 const manualPote = participant?.manual_pote ?? null
@@ -580,10 +595,15 @@ export default function AdminRodadaPage() {
                                       type="checkbox"
                                       checked={isConfirmed}
                                       onChange={e => handleToggleParticipant(r.id, player.id, e.target.checked)}
-                                      disabled={!isConfirmed && confirmedCount >= 18}
+                                      disabled={!isConfirmed && !isGoalkeeper && fieldCount >= 18}
                                       className="h-4 w-4 rounded border-input text-primary"
                                     />
-                                    <span className="flex-1 text-sm">{player.name}</span>
+                                    <span className="flex-1 text-sm">
+                                      {player.name}
+                                      {isGoalkeeper && (
+                                        <span className="ml-1.5 text-xs text-muted-foreground">(goleiro)</span>
+                                      )}
+                                    </span>
                                     {participant && (
                                       <span className="text-xs text-muted-foreground">
                                         {Number(participant.ranking_index).toFixed(2)}

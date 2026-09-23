@@ -20,22 +20,28 @@ export async function GET(req: NextRequest) {
 
   if (!rounds) return NextResponse.json({ rounds: [], active_round_id: null }, { headers: { 'Cache-Control': 'no-store' } })
 
-  // Busca contagem de participantes por rodada
+  // Contagem de participantes por rodada, separando jogadores de linha e goleiros.
+  // Goleiros tem vaga garantida fora dos 18 e nao entram na montagem dos potes.
   const { data: participants } = await supabase
     .from('round_participants')
-    .select('round_id')
+    .select('round_id, players!inner(is_goalkeeper)')
     .in('round_id', rounds.map(r => r.id))
 
-  const countByRound: Record<number, number> = {}
+  const fieldByRound: Record<number, number> = {}
+  const keeperByRound: Record<number, number> = {}
   for (const p of participants || []) {
-    countByRound[p.round_id] = (countByRound[p.round_id] ?? 0) + 1
+    const isKeeper = (p.players as unknown as { is_goalkeeper: boolean })?.is_goalkeeper
+    const target = isKeeper ? keeperByRound : fieldByRound
+    target[p.round_id] = (target[p.round_id] ?? 0) + 1
   }
 
   const result = rounds.map(r => ({
     id: r.id,
     scheduled_date: r.scheduled_date,
     status: r.status,
-    participant_count: countByRound[r.id] ?? 0,
+    field_count: fieldByRound[r.id] ?? 0,
+    goalkeeper_count: keeperByRound[r.id] ?? 0,
+    participant_count: (fieldByRound[r.id] ?? 0) + (keeperByRound[r.id] ?? 0),
   }))
 
   return NextResponse.json(
