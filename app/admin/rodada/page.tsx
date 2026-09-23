@@ -23,7 +23,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { toast } from 'sonner'
-import { isValidRoundSize, VALID_ROUND_SIZES } from '@/lib/constants'
+import { MIN_ROUND_SIZE, ROUND_SIZE, isValidRoundSize } from '@/lib/constants'
 
 interface Player { id: number; name: string; active: boolean; is_goalkeeper?: boolean }
 
@@ -429,7 +429,7 @@ export default function AdminRodadaPage() {
             const potsBuilt = (details?.pots?.length ?? 0) > 0
             const drawn = r.status === 'drawn' || r.status === 'closed'
             const canSubstitute = r.status === 'drawn'
-            // Potes de 3: a quantidade de potes acompanha o total (12 -> 4, 15 -> 5, 18 -> 6)
+            // Qualquer total de 12 a 18: o ultimo pote pode ficar incompleto
             const validSize = isValidRoundSize(fieldCount)
             // Remontar e permitido enquanto nao sorteou: o build-pots limpa round_pots
             // e round_teams antes de inserir, e o elenco pode mudar de 15 para 18.
@@ -496,7 +496,7 @@ export default function AdminRodadaPage() {
                         )}
                         {r.status !== 'closed' && r.status !== 'drawn' && !validSize && (
                           <span className="text-xs text-muted-foreground self-center">
-                            Precisa de {VALID_ROUND_SIZES.join(', ')} jogadores de linha
+                            Precisa de {MIN_ROUND_SIZE} a {ROUND_SIZE} jogadores de linha
                           </span>
                         )}
                         {potsBuilt && r.status !== 'drawn' && r.status !== 'closed' && (

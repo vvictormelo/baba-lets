@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { checkAdminAuth } from '@/lib/admin-auth'
-import { isValidRoundSize } from '@/lib/constants'
+import { TEAMS, isValidRoundSize } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,9 +46,12 @@ export async function POST(
   const rows: { round_id: number; team: number; player_id: number; pote: number }[] = []
   for (const [poteStr, playerIds] of Object.entries(byPote)) {
     const pote = Number(poteStr)
-    const shuffled = shuffle(playerIds)
-    shuffled.forEach((playerId, i) => {
-      rows.push({ round_id, team: i + 1, player_id: playerId, pote })
+    const shuffledPlayers = shuffle(playerIds)
+    // Sorteia tambem QUAIS times recebem: num pote incompleto a lacuna precisa
+    // cair em times aleatorios, nao sempre nos ultimos.
+    const teams = shuffle(Array.from(TEAMS)).slice(0, shuffledPlayers.length)
+    shuffledPlayers.forEach((playerId, i) => {
+      rows.push({ round_id, team: teams[i], player_id: playerId, pote })
     })
   }
 

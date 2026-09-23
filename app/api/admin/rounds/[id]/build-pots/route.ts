@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { checkAdminAuth } from '@/lib/admin-auth'
-import { POT_SIZE, VALID_ROUND_SIZES, isValidRoundSize } from '@/lib/constants'
+import { MIN_ROUND_SIZE, POT_SIZE, ROUND_SIZE, isValidRoundSize, potCapacity, potCountFor } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,19 +28,20 @@ export async function POST(
     p => !(p.players as unknown as { is_goalkeeper: boolean }).is_goalkeeper
   )
 
-  // A quantidade de potes acompanha o total de jogadores de linha, sempre com
-  // POT_SIZE por pote: 12 -> 4 potes, 15 -> 5, 18 -> 6. Assim cada time recebe
-  // 1 jogador de cada pote e os tres times saem do mesmo tamanho.
+  // A quantidade de potes acompanha o total de jogadores de linha. Quando o total
+  // nao e multiplo de POT_SIZE, o ultimo pote fica incompleto e um ou dois times
+  // ficam com um jogador a menos.
   if (!isValidRoundSize(participants.length)) {
     return NextResponse.json(
       {
-        error: `Rodada precisa de ${VALID_ROUND_SIZES.join(', ')} jogadores de linha. Atual: ${participants.length}`,
+        error: `Rodada precisa de ${MIN_ROUND_SIZE} a ${ROUND_SIZE} jogadores de linha. Atual: ${participants.length}`,
       },
       { status: 400 }
     )
   }
 
-  const potCount = participants.length / POT_SIZE
+  const fieldTotal = participants.length
+  const potCount = potCountFor(fieldTotal)
 
   // Valida novatos com pote manual
   const novatos = participants.filter(p => p.is_novice)
@@ -87,11 +88,12 @@ export async function POST(
     potes[novato.manual_pote!].push(novato.player_id)
   }
 
-  // Valida que nenhum pote tem mais de 3 novatos
+  // Valida a lotacao de cada pote -- o ultimo pode ter capacidade menor que POT_SIZE
   for (const [pote, ids] of Object.entries(potes)) {
-    if (ids.length > POT_SIZE) {
+    const cap = potCapacity(Number(pote), fieldTotal)
+    if (ids.length > cap) {
       return NextResponse.json(
-        { error: `Pote ${pote} tem mais de ${POT_SIZE} novatos` },
+        { error: `Pote ${pote} tem ${ids.length} novatos, mas so cabe${cap === 1 ? '' : 'm'} ${cap} nesta rodada` },
         { status: 400 }
       )
     }
@@ -100,7 +102,7 @@ export async function POST(
   // Preenche os potes em ordem com os ranqueados
   const queue = [...sortedRegular]
   for (const poteNum of poteNums) {
-    const vagas = POT_SIZE - potes[poteNum].length
+    const vagas = potCapacity(poteNum, fieldTotal) - potes[poteNum].length
     potes[poteNum].push(...queue.splice(0, vagas))
   }
 
