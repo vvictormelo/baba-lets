@@ -53,6 +53,7 @@ interface RoundDetails {
   participants: RoundParticipant[]
   pots: PotEntry[]
   teams: TeamEntry[]
+  absent_ids: number[]
 }
 
 interface AwardEntry { player_id: number; name: string; votes: number }
@@ -198,6 +199,17 @@ export default function AdminRodadaPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
       body: JSON.stringify({ player_id: playerId, confirmed }),
+    })
+    if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Erro'); return }
+    await fetchRoundDetails(roundId, password)
+    await fetchRoundList(password)
+  }
+
+  async function handleToggleAbsent(roundId: number, playerId: number, absent: boolean) {
+    const res = await fetch(`/api/admin/rounds/${roundId}/participants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ player_id: playerId, confirmed: false, absent }),
     })
     if (!res.ok) { const d = await res.json(); toast.error(d.error || 'Erro'); return }
     await fetchRoundDetails(roundId, password)
@@ -421,6 +433,7 @@ export default function AdminRodadaPage() {
             const awards = awardsMap[r.id]
             const isActive = r.id === activeRoundId
             const confirmedIds = new Set((details?.participants || []).map(p => p.player_id))
+            const absentIds = new Set(details?.absent_ids || [])
             // Goleiros tem vaga garantida fora dos 18 e nao entram na montagem dos potes,
             // entao a contagem que vale para liberar o sorteio e so a dos jogadores de linha.
             const goalkeeperIds = new Set(allPlayers.filter(p => p.is_goalkeeper).map(p => p.id))
@@ -560,6 +573,9 @@ export default function AdminRodadaPage() {
                                 {goalkeeperCount > 0 && (
                                   <span className="text-muted-foreground font-normal"> + {goalkeeperCount} {goalkeeperCount === 1 ? 'goleiro' : 'goleiros'}</span>
                                 )}
+                                {absentIds.size > 0 && (
+                                  <span className="text-muted-foreground font-normal"> · {absentIds.size} não {absentIds.size === 1 ? 'vai' : 'vão'}</span>
+                                )}
                               </p>
                               <Button
                                 variant="ghost"
@@ -595,12 +611,13 @@ export default function AdminRodadaPage() {
                             <div className="border border-border rounded-lg divide-y divide-border max-h-80 overflow-y-auto">
                               {allPlayers.filter(p => p.active).map(player => {
                                 const isConfirmed = confirmedIds.has(player.id)
+                                const isAbsent = !isConfirmed && absentIds.has(player.id)
                                 const isGoalkeeper = !!player.is_goalkeeper
                                 const participant = details.participants.find(p => p.player_id === player.id)
                                 const isNovice = participant?.is_novice ?? false
                                 const manualPote = participant?.manual_pote ?? null
                                 return (
-                                  <div key={player.id} className={`px-3 py-2 flex items-center gap-2 ${isConfirmed ? 'bg-primary/5' : ''}`}>
+                                  <div key={player.id} className={`px-3 py-2 flex items-center gap-2 ${isConfirmed ? 'bg-primary/5' : isAbsent ? 'bg-destructive/5' : ''}`}>
                                     <input
                                       type="checkbox"
                                       checked={isConfirmed}
@@ -608,7 +625,7 @@ export default function AdminRodadaPage() {
                                       disabled={!isConfirmed && !isGoalkeeper && fieldCount >= 18}
                                       className="h-4 w-4 rounded border-input text-primary"
                                     />
-                                    <span className="flex-1 text-sm">
+                                    <span className={`flex-1 text-sm ${isAbsent ? 'text-muted-foreground line-through' : ''}`}>
                                       {player.name}
                                       {isGoalkeeper && (
                                         <span className="ml-1.5 text-xs text-muted-foreground">(goleiro)</span>
@@ -618,6 +635,20 @@ export default function AdminRodadaPage() {
                                       <span className="text-xs text-muted-foreground">
                                         {Number(participant.ranking_index).toFixed(2)}
                                       </span>
+                                    )}
+                                    {!isConfirmed && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleToggleAbsent(r.id, player.id, !isAbsent)}
+                                        className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                                          isAbsent
+                                            ? 'bg-destructive/10 text-destructive border-destructive/20'
+                                            : 'text-muted-foreground border-border hover:text-destructive hover:border-destructive/40'
+                                        }`}
+                                        title={isAbsent ? 'Desfazer "não vai"' : 'Marcar que não vai'}
+                                      >
+                                        {isAbsent ? 'Não vai ✕' : 'Não vai'}
+                                      </button>
                                     )}
                                     {isConfirmed && (
                                       <div className="flex items-center gap-2">

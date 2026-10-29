@@ -4,7 +4,8 @@ import { checkAdminAuth } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
-// Adiciona ou remove participante; atualiza novato/pote_manual
+// Adiciona ou remove participante; atualiza novato/pote_manual.
+// absent=true marca "não vai" (mesmo efeito do checkin do jogador); absent=false desfaz a marcação.
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -14,7 +15,7 @@ export async function POST(
   }
 
   const round_id = Number(params.id)
-  const { player_id, confirmed, is_novice, manual_pote } = await req.json()
+  const { player_id, confirmed, is_novice, manual_pote, absent } = await req.json()
 
   if (!player_id) {
     return NextResponse.json({ error: 'player_id obrigatório' }, { status: 400 })
@@ -29,6 +30,23 @@ export async function POST(
       .delete()
       .eq('round_id', round_id)
       .eq('player_id', player_id)
+
+    if (absent === true) {
+      const { error } = await supabase
+        .from('round_attendance')
+        .upsert(
+          { round_id, player_id, status: 'absent', updated_at: new Date().toISOString() },
+          { onConflict: 'round_id,player_id' }
+        )
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    } else if (absent === false) {
+      await supabase
+        .from('round_attendance')
+        .delete()
+        .eq('round_id', round_id)
+        .eq('player_id', player_id)
+        .eq('status', 'absent')
+    }
 
     return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } })
   }
@@ -70,6 +88,14 @@ export async function POST(
     .upsert(row, { onConflict: 'round_id,player_id' })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Confirmar pelo admin derruba uma ausencia marcada antes, senao o painel do jogador seguiria "Ausente"
+  await supabase
+    .from('round_attendance')
+    .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+    .eq('round_id', round_id)
+    .eq('player_id', player_id)
+    .eq('status', 'absent')
 
   return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } })
 }

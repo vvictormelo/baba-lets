@@ -51,8 +51,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     .order('team')
     .order('pote')
 
+  // Ausencias marcadas pelo jogador (checkin "Não vou") ou pelo admin
+  const { data: absences } = await supabase
+    .from('round_attendance')
+    .select('player_id')
+    .eq('round_id', roundId)
+    .eq('status', 'absent')
+
   return NextResponse.json(
-    { round, participants: participantsWithRanking, pots: pots || [], teams: teams || [] },
+    {
+      round,
+      participants: participantsWithRanking,
+      pots: pots || [],
+      teams: teams || [],
+      absent_ids: (absences || []).map(a => a.player_id),
+    },
     { headers: { 'Cache-Control': 'no-store' } }
   )
 }
